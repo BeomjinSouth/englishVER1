@@ -3,7 +3,7 @@ from pathlib import Path
 from openai import OpenAI
 
 # OpenAI API 클라이언트 초기화
-client = OpenAI(api_key='YOUR_OPENAI_API_KEY')
+client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
 # Streamlit 애플리케이션 제목
 st.title('대본 음원 생성기')
