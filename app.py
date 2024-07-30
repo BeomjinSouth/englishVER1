@@ -20,7 +20,8 @@ if st.button('생성하기'):
     response = client.audio.speech.create(
         model="tts-1-hd",
         voice=voice,
-        input=script
+        input=script,
+        speed=0.8
     )
     
     # 음성 파일 저장
