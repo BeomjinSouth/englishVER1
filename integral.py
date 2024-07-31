@@ -8,20 +8,21 @@ def app():
     
     def plot_func_and_points(func, x_array, y_array):
         x = sp.symbols('x')
-        p = sp.plot(func, (x, -2, float(max(x_array)) + 2), show=False)
-        p.xlabel = 'x'
-        p.ylabel = 'f(x)'
-
+        f = sp.lambdify(x, func, 'numpy')
+        
         fig, ax = plt.subplots()
-        p[0].line_color = 'red'
-        p._backend.fig = fig
-        p._backend.ax[0] = ax
-        p.show()
-
-        ax.scatter(x_array, y_array, color='blue')
+        x_vals = np.linspace(min(x_array), max(x_array), 1000)
+        y_vals = f(x_vals)
+        
+        ax.plot(x_vals, y_vals, label=str(func))
+        ax.scatter(x_array, y_array, color='red')
+        ax.set_xlabel('x')
+        ax.set_ylabel('f(x)')
+        ax.legend()
+        
         return fig
 
-    def area(func, x_inf, x_sup, delta_x):
+    def area(func, x_inf, x_sup):
         x = sp.symbols('x')
         F = sp.integrate(func, x)
         area_result = F.subs(x, x_sup) - F.subs(x, x_inf)
@@ -71,7 +72,7 @@ def app():
             st.pyplot(fig)
 
         if st.button("면적 계산하기"):
-            area_result = area(func, x_inf, x_sup, delta_x)
+            area_result = area(func, x_inf, x_sup)
             st.write(f"{x_inf}에서 {x_sup}까지 곡선 아래의 면적은: {area_result} 입니다.")
 
         if st.button("리만 합 그리기"):
