@@ -3,6 +3,12 @@ import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
 
+st.set_page_config(
+    page_title="적분 계산기",
+    layout="centered",
+    initial_sidebar_state="auto",
+)
+
 def app():
     st.title("적분 계산기")
 
@@ -21,7 +27,9 @@ def app():
         ax.legend()
         
         # 그래프 비율 조정
-        ax.set_aspect('equal', adjustable='box')
+        ax.set_aspect('equal', adjustable='datalim')
+        ax.relim()
+        ax.autoscale_view()
 
         return fig
 
@@ -54,7 +62,9 @@ def app():
         ax.set_ylabel('f(x)')
         
         # 그래프 비율 조정
-        ax.set_aspect('equal', adjustable='box')
+        ax.set_aspect('equal', adjustable='datalim')
+        ax.relim()
+        ax.autoscale_view()
 
         return fig, left_riemann_sum, right_riemann_sum
 
