@@ -21,9 +21,7 @@ def app():
         ax.legend()
         
         # 그래프 비율 조정
-        ax.set_aspect(aspect='auto', adjustable='datalim')
-        ax.relim()
-        ax.autoscale_view()
+        ax.set_aspect('equal', adjustable='box')
 
         return fig
 
@@ -56,9 +54,7 @@ def app():
         ax.set_ylabel('f(x)')
         
         # 그래프 비율 조정
-        ax.set_aspect(aspect='auto', adjustable='datalim')
-        ax.relim()
-        ax.autoscale_view()
+        ax.set_aspect('equal', adjustable='box')
 
         return fig, left_riemann_sum, right_riemann_sum
 
