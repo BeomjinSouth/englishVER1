@@ -1,7 +1,7 @@
 streamlit
 openai
 python-dotenv
-google-cloud-texttospeech
-gtts
-wave
 pydub
+numpy
+sympy
+matplotlib
