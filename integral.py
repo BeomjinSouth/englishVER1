@@ -12,12 +12,12 @@ st.set_page_config(
 def app():
     st.title("적분 계산기")
 
-    def plot_func_and_points(func, x_array, y_array):
+    def plot_func_and_points(func, x_array, y_array, x_inf, x_sup):
         x = sp.symbols('x')
         f = sp.lambdify(x, func, 'numpy')
 
         fig, ax = plt.subplots()
-        x_vals = np.linspace(min(x_array), max(x_array), 1000)
+        x_vals = np.linspace(x_inf, x_sup, 1000)
         y_vals = f(x_vals)
 
         ax.plot(x_vals, y_vals, label=str(func))
@@ -28,6 +28,7 @@ def app():
         
         # 그래프 비율 조정
         ax.set_aspect('equal', adjustable='datalim')
+        ax.set_xlim(x_inf, x_sup)
         ax.relim()
         ax.autoscale_view()
 
@@ -63,6 +64,7 @@ def app():
         
         # 그래프 비율 조정
         ax.set_aspect('equal', adjustable='datalim')
+        ax.set_xlim(x_inf, x_sup)
         ax.relim()
         ax.autoscale_view()
 
@@ -84,7 +86,7 @@ def app():
 
         if st.button("함수와 점들 그리기"):
             y_vals = [func.subs(x, val) for val in np.arange(x_inf, x_sup, delta_x)]
-            fig = plot_func_and_points(func, np.arange(x_inf, x_sup, delta_x), y_vals)
+            fig = plot_func_and_points(func, np.arange(x_inf, x_sup, delta_x), y_vals, x_inf, x_sup)
             st.pyplot(fig)
 
         if st.button("면적 계산하기"):
@@ -94,7 +96,4 @@ def app():
         if st.button("리만 합 그리기"):
             fig, left_riemann_sum, right_riemann_sum = plot_riemann_sums(func, x_inf, x_sup, delta_x)
             st.pyplot(fig)
-            st.write(f"좌측 리만 합: {left_riemann_sum}")
-            st.write(f"우측 리만 합: {right_riemann_sum}")
-
-app()
+            st.wr
