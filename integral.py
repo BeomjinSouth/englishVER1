@@ -5,20 +5,23 @@ import matplotlib.pyplot as plt
 
 def app():
     st.title("적분 계산기")
-    
+
     def plot_func_and_points(func, x_array, y_array):
         x = sp.symbols('x')
         f = sp.lambdify(x, func, 'numpy')
-        
+
         fig, ax = plt.subplots()
         x_vals = np.linspace(min(x_array), max(x_array), 1000)
         y_vals = f(x_vals)
-        
+
         ax.plot(x_vals, y_vals, label=str(func))
         ax.scatter(x_array, y_array, color='red')
         ax.set_xlabel('x')
         ax.set_ylabel('f(x)')
         ax.legend()
+        
+        # x축과 y축 비율을 실제 값에 맞추기 위해 조정
+        ax.set_aspect(aspect='auto')
         
         return fig
 
@@ -31,10 +34,10 @@ def app():
     def plot_riemann_sums(func, x_inf, x_sup, delta_x):
         x = sp.symbols('x')
         f = sp.lambdify(x, func, 'numpy')
-        
+
         x_vals = np.arange(x_inf, x_sup, delta_x)
         y_vals = f(x_vals)
-        
+
         left_riemann_sum = np.sum(y_vals[:-1] * delta_x)
         right_riemann_sum = np.sum(y_vals[1:] * delta_x)
 
@@ -49,6 +52,9 @@ def app():
         ax.legend()
         ax.set_xlabel('x')
         ax.set_ylabel('f(x)')
+        
+        # x축과 y축 비율을 실제 값에 맞추기 위해 조정
+        ax.set_aspect(aspect='auto')
 
         return fig, left_riemann_sum, right_riemann_sum
 
@@ -56,8 +62,8 @@ def app():
     st.header("함수와 적분 입력")
     func_input = st.text_input("함수를 입력하세요 (x의 함수):", "x**2")
     x_inf = st.number_input("하한값 (x_inf)을 입력하세요:", value=0.0)
-    x_sup = st.number_input("상한값 (x_sup)을 입력하세요:", value=1.0)
-    delta_x = st.number_input("리만 합의 델타 x를 입력하세요:", value=0.1, min_value=0.01)
+    x_sup = st.number_input("상한값 (x_sup)을 입력하세요:", value=10.0)
+    delta_x = st.number_input("리만 합의 델타 x를 입력하세요:", value=1.0, min_value=0.01)
 
     # 입력 값 검증
     if '=' in func_input:
@@ -80,4 +86,3 @@ def app():
             st.pyplot(fig)
             st.write(f"좌측 리만 합: {left_riemann_sum}")
             st.write(f"우측 리만 합: {right_riemann_sum}")
-
