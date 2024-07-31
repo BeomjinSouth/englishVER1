@@ -17,7 +17,7 @@ def app():
         x = sp.symbols('x')
         f = sp.lambdify(x, func, 'numpy')
 
-        fig, ax = plt.subplots(figsize=(6, 6))  # 600x600 크기로 설정 (인치 단위)
+        fig, ax = plt.subplots(figsize=(4, 4))  # 600x600 크기로 설정 (인치 단위)
         x_vals = np.linspace(x_inf, x_sup, 1000)
         y_vals = f(x_vals)
 
@@ -50,7 +50,7 @@ def app():
         left_riemann_sum = np.sum(y_vals[:-1] * delta_x)
         right_riemann_sum = np.sum(y_vals[1:] * delta_x)
 
-        fig, ax = plt.subplots(figsize=(6, 6))  # 600x600 크기로 설정 (인치 단위)
+        fig, ax = plt.subplots(figsize=(4, 4))  # 600x600 크기로 설정 (인치 단위)
         x_plot = np.linspace(x_inf, x_sup, 1000)
         y_plot = f(x_plot)
         ax.plot(x_plot, y_plot, 'r', label='f(x)')
