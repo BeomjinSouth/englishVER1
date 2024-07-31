@@ -23,6 +23,11 @@ def app():
         # x축과 y축 비율을 실제 값에 맞추기 위해 조정
         ax.set_aspect(aspect='auto')
         
+        # x와 y의 비율을 맞추기 위해 추가 조정
+        x_range = max(x_vals) - min(x_vals)
+        y_range = max(y_vals) - min(y_vals)
+        ax.set_aspect(aspect=x_range/y_range)
+
         return fig
 
     def area(func, x_inf, x_sup):
@@ -55,6 +60,11 @@ def app():
         
         # x축과 y축 비율을 실제 값에 맞추기 위해 조정
         ax.set_aspect(aspect='auto')
+        
+        # x와 y의 비율을 맞추기 위해 추가 조정
+        x_range = max(x_vals) - min(x_vals)
+        y_range = max(y_vals) - min(y_vals)
+        ax.set_aspect(aspect=x_range/y_range)
 
         return fig, left_riemann_sum, right_riemann_sum
 
@@ -86,3 +96,4 @@ def app():
             st.pyplot(fig)
             st.write(f"좌측 리만 합: {left_riemann_sum}")
             st.write(f"우측 리만 합: {right_riemann_sum}")
+
