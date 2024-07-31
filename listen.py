@@ -1,8 +1,6 @@
 import streamlit as st
 from pathlib import Path
 from openai import OpenAI
-import os
-from dotenv import load_dotenv
 from collections import Counter
 import re
 import random
@@ -76,9 +74,7 @@ def get_voice(option, idx, gender):
         print(f"Selected {gender} voice: {option}")
         return option
 
-load_dotenv()
-
-api_key = os.getenv('OPENAI_API_KEY')
+api_key = st.secrets["OPENAI_API_KEY"]
 
 if not api_key:
     st.error("API key not found. Please set the OPENAI_API_KEY environment variable.")
