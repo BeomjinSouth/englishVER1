@@ -26,11 +26,10 @@ def app():
         ax.set_ylabel('f(x)')
         ax.legend()
         
-        # 그래프 비율 조정
-        ax.set_aspect('equal', adjustable='datalim')
+        # 그래프 x축과 y축 범위 및 비율 조정
         ax.set_xlim(x_inf, x_sup)
-        ax.relim()
-        ax.autoscale_view()
+        ax.set_ylim(min(y_vals), max(y_vals))
+        ax.set_aspect('equal', adjustable='datalim')
 
         return fig
 
@@ -62,11 +61,10 @@ def app():
         ax.set_xlabel('x')
         ax.set_ylabel('f(x)')
         
-        # 그래프 비율 조정
-        ax.set_aspect('equal', adjustable='datalim')
+        # 그래프 x축과 y축 범위 및 비율 조정
         ax.set_xlim(x_inf, x_sup)
-        ax.relim()
-        ax.autoscale_view()
+        ax.set_ylim(min(y_plot), max(y_plot))
+        ax.set_aspect('equal', adjustable='datalim')
 
         return fig, left_riemann_sum, right_riemann_sum
 
@@ -96,4 +94,7 @@ def app():
         if st.button("리만 합 그리기"):
             fig, left_riemann_sum, right_riemann_sum = plot_riemann_sums(func, x_inf, x_sup, delta_x)
             st.pyplot(fig)
-            st.wr
+            st.write(f"좌측 리만 합: {left_riemann_sum}")
+            st.write(f"우측 리만 합: {right_riemann_sum}")
+
+app()
