@@ -79,7 +79,7 @@ def app():
         if st.button("함수와 점들 그리기"):
             y_vals = [func.subs(x, val) for val in np.arange(x_inf, x_sup, delta_x)]
             fig = plot_func_and_points(func, np.arange(x_inf, x_sup, delta_x), y_vals, x_inf, x_sup)
-            st.pyplot(fig)
+            st.pyplot(fig, use_container_width=False)  # use_container_width=False를 사용하여 고정 크기로 표시
 
         if st.button("면적 계산하기"):
             area_result = area(func, x_inf, x_sup)
@@ -87,7 +87,6 @@ def app():
 
         if st.button("리만 합 그리기"):
             fig, left_riemann_sum, right_riemann_sum = plot_riemann_sums(func, x_inf, x_sup, delta_x)
-            st.pyplot(fig)
+            st.pyplot(fig, use_container_width=False)  # use_container_width=False를 사용하여 고정 크기로 표시
             st.write(f"좌측 리만 합: {left_riemann_sum}")
             st.write(f"우측 리만 합: {right_riemann_sum}")
-
