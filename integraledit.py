@@ -30,19 +30,15 @@ def app():
             st.write(f"좌측 리만 합: {left_riemann_sum}")
             st.write(f"우측 리만 합: {right_riemann_sum}")
 
+        if st.button("그림 모두 지우기"):
+            figures.clear()  # 그림 리스트를 비웁니다.
+            st.experimental_rerun()  # 앱을 재실행하여 화면을 갱신합니다.
+
 def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     x = sp.symbols('x')
     f = sp.lambdify(x, func, 'numpy')
     x_vals = np.arange(x_inf, x_sup, delta_x)
     y_vals = f(x_vals)
-    
-    # 리만 합을 계산합니다. y_vals는 함수의 y 값들의 배열입니다.
-    # 왼쪽 리만 합: 각 구간의 시작점에서 함수 값에 delta_x를 곱합니다.
-    left_riemann_sum = np.sum(y_vals[:-1] * delta_x)  # 마지막 점 제외
-    # 오른쪽 리만 합: 각 구간의 끝점에서 함수 값에 delta_x를 곱합니다.
-    right_riemann_sum = np.sum(y_vals[1:] * delta_x)  # 첫 점 제외
-    
-    # 그래프를 그리는 부분
     fig, ax = plt.subplots(figsize=(4, 4))
     x_plot = np.linspace(x_inf, x_sup, 1000)
     y_plot = f(x_plot)
@@ -55,9 +51,7 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     ax.set_xlim(x_inf, x_sup)
     ax.set_ylim(min(y_plot), max(y_plot))
     ax.set_aspect('equal', adjustable='box')
-
     return fig, left_riemann_sum, right_riemann_sum
-
 
 def display_figures():
     num_cols = 2  # 2단으로 설정
