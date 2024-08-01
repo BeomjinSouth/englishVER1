@@ -49,7 +49,7 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     y_plot = f(x_plot)
 
     ax.plot(x_plot, y_plot, 'r', label='f(x)')
-    ax.bar(x_vals[:-1], y_vals[:-1], width=delta_x, align='edge', alpha=0.3, edgecolor='black', label='Left Riemann Sum')
+    ax.bar(x_vals[:-1], y_vals[:-1], width=delta_x, align='edge', alpha=0.3, edgecolor='black', color='red', label='Left Riemann Sum')
     ax.bar(x_vals[:-1], y_vals[1:], width=delta_x, align='edge', alpha=0.3, edgecolor='black', color='green', label='Right Riemann Sum')
     ax.legend()
     ax.set_xlabel('x')
