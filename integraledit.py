@@ -3,6 +3,9 @@ import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
 
+# 전역 변수로 그림 저장
+figures = []
+
 def app():
     st.title("적분 계산기")
     st.header("함수와 적분 입력")
@@ -17,46 +20,21 @@ def app():
         x = sp.symbols('x')
         func = sp.sympify(func_input)
 
-        if st.button("함수와 점들 그리기"):
-            y_vals = [func.subs(x, val) for val in np.arange(x_inf, x_sup, delta_x)]
-            fig = plot_func_and_points(func, np.arange(x_inf, x_sup, delta_x), y_vals, x_inf, x_sup)
-            st.pyplot(fig, use_container_width=False)
-
-        if st.button("면적 계산하기"):
-            area_result = area(func, x_inf, x_sup)
-            st.write(f"{x_inf}에서 {x_sup}까지 곡선 아래의 면적은: {area_result} 입니다.")
-
         if st.button("리만 합 그리기"):
             fig, left_riemann_sum, right_riemann_sum = plot_riemann_sums(func, x_inf, x_sup, delta_x)
-            cols = st.columns(2)
-            with cols[0]:
-                st.pyplot(fig, use_container_width=False)
+            figures.append(fig)  # 그림 저장
+
+            # 저장된 그림을 적절한 위치에 표시
+            display_figures()
+
             st.write(f"좌측 리만 합: {left_riemann_sum}")
             st.write(f"우측 리만 합: {right_riemann_sum}")
-
-def plot_func_and_points(func, x_array, y_array, x_inf, x_sup):
-    x = sp.symbols('x')
-    f = sp.lambdify(x, func, 'numpy')
-    fig, ax = plt.subplots(figsize=(4, 4))
-    x_vals = np.linspace(x_inf, x_sup, 1000)
-    y_vals = f(x_vals)
-    ax.plot(x_vals, y_vals, label=str(func))
-    ax.scatter(x_array, y_array, color='red')
-    ax.set_xlabel('x')
-    ax.set_ylabel('f(x)')
-    ax.legend()
-    ax.set_xlim(x_inf, x_sup)
-    ax.set_ylim(min(y_vals), max(y_vals))
-    ax.set_aspect('equal', adjustable='box')
-    return fig
 
 def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     x = sp.symbols('x')
     f = sp.lambdify(x, func, 'numpy')
     x_vals = np.arange(x_inf, x_sup, delta_x)
     y_vals = f(x_vals)
-    left_riemann_sum = np.sum(y_vals[:-1] * delta_x)
-    right_riemann_sum = np.sum(y_vals[1:] * delta_x)
     fig, ax = plt.subplots(figsize=(4, 4))
     x_plot = np.linspace(x_inf, x_sup, 1000)
     y_plot = f(x_plot)
@@ -70,3 +48,19 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     ax.set_ylim(min(y_plot), max(y_plot))
     ax.set_aspect('equal', adjustable='box')
     return fig, left_riemann_sum, right_riemann_sum
+
+def display_figures():
+    num_cols = 2  # 2단으로 설정
+    rows_needed = (len(figures) + 1) // num_cols  # 필요한 행 계산
+    index = 0
+
+    for _ in range(rows_needed):
+        cols = st.columns(num_cols)  # 열 생성
+        for col in cols:
+            if index < len(figures):
+                with col:
+                    st.pyplot(figures[index], use_container_width=False)  # 그림 표시
+                index += 1
+
+if __name__ == "__main__":
+    app()
