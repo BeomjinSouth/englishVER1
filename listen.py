@@ -18,7 +18,7 @@ def app():
             height: 54px;
             font-size: 24px;
         }
-        .font-large {font-size: 22.5px; font-weight: bold;}
+        .big-font {font-size: 22.5px; font-weight: bold;}
         </style>
         """,
         unsafe_allow_html=True
@@ -90,13 +90,16 @@ def app():
         speed_rate = col_speed.slider("음성 속도(배)", 0.55, 1.85, 1.0, 0.05)
         
         voice_selection = st.columns(3)
-        ko_option = voice_selection[0].selectbox("한국어 음성", ['alloy', 'echo', 'fable', 'nova', 'onyx', 'shimmer'], index=2, format_func=lambda x: f"**{x}**", css_class="font-large")
-        female_voice = voice_selection[1].selectbox("여성 음성", ['alloy', 'fable', 'nova', 'shimmer', "sequential", "random"], format_func=lambda x: f"**{x}**", css_class="font-large")
-        male_voice = voice_selection[2].selectbox("남성 음성", ['echo', 'onyx', "sequential", "random"], format_func=lambda x: f"**{x}**", css_class="font-large")
+        st.markdown("<p class='big-font'>한국어 음성</p>", unsafe_allow_html=True)
+        ko_option = voice_selection[0].selectbox("한국어 음성", ['alloy', 'echo', 'fable', 'nova', 'onyx', 'shimmer'], index=2)
+        st.markdown("<p class='big-font'>여성 음성</p>", unsafe_allow_html=True)
+        female_voice = voice_selection[1].selectbox("여성 음성", ['alloy', 'fable', 'nova', 'shimmer', "sequential", "random"])
+        st.markdown("<p class='big-font'>남성 음성</p>", unsafe_allow_html=True)
+        male_voice = voice_selection[2].selectbox("남성 음성", ['echo', 'onyx', "sequential", "random"])
 
         gap_selection = st.columns(2)
-        interline = gap_selection[0].slider("대사 간격(ms)", min_value=30, max_value=1000, value=200, help="문장 사이의 무음 구간 길이", css_class="font-large")
-        internum = gap_selection[1].slider("문제 간격(s)", min_value=1, max_value=15, value=5, help="문제와 문제 사이의 무음 구간 길이", css_class="font-large")
+        interline = gap_selection[0].slider("대사 간격(ms)", min_value=30, max_value=1000, value=200, help="문장 사이의 무음 구간 길이")
+        internum = gap_selection[1].slider("문제 간격(s)", min_value=1, max_value=15, value=5, help="문제와 문제 사이의 무음 구간 길이")
 
         st.markdown("## 유의사항")
         st.markdown("""
