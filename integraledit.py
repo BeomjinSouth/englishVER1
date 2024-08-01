@@ -44,7 +44,7 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     right_riemann_sum = np.sum(y_vals[1:] * delta_x)
 
     # 그림 크기를 4x4 인치로 명시적으로 설정
-    fig, ax = plt.subplots(figsize=(4, 4))  # 여기서 크기를 지정합니다.
+    fig, ax = plt.subplots(figsize=(3, 3))  # 여기서 크기를 지정합니다.
     x_plot = np.linspace(x_inf, x_sup, 1000)
     y_plot = f(x_plot)
 
