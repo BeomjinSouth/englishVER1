@@ -3,8 +3,8 @@ import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
 
-# 전역 변수로 그림 저장
-figures = []
+# 전역 변수로 그림과 계산 결과를 저장
+results = []
 
 def app():
     st.title("적분 계산기")
@@ -22,16 +22,17 @@ def app():
 
         if st.button("리만 합 그리기"):
             fig, left_riemann_sum, right_riemann_sum = plot_riemann_sums(func, x_inf, x_sup, delta_x)
-            figures.append(fig)  # 그림 저장
-            display_figures()
-
             difference = abs(left_riemann_sum - right_riemann_sum)
-            st.write(f"좌측 리만 합: {left_riemann_sum:.2f}")
-            st.write(f"우측 리만 합: {right_riemann_sum:.2f}")
-            st.write(f"리만 합 차이: {difference:.2f}")
+            results.append({
+                "fig": fig,
+                "left_sum": left_riemann_sum,
+                "right_sum": right_riemann_sum,
+                "difference": difference
+            })
+            display_results()
 
         if st.button("그림 모두 지우기"):
-            figures.clear()  # 그림 리스트를 비웁니다.
+            results.clear()
             st.write("모든 그림이 제거되었습니다. 페이지를 새로 고침하세요.")
 
 def plot_riemann_sums(func, x_inf, x_sup, delta_x):
@@ -59,18 +60,12 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
 
     return fig, left_riemann_sum, right_riemann_sum
 
-def display_figures():
-    num_cols = 2
-    rows_needed = (len(figures) + 1) // num_cols
-    index = 0
-
-    for _ in range(rows_needed):
-        cols = st.columns(num_cols)
-        for col in cols:
-            if index < len(figures):
-                with col:
-                    st.pyplot(figures[index], use_container_width=False)
-                index += 1
+def display_results():
+    for result in results:
+        st.pyplot(result["fig"])
+        st.write(f"좌측 리만 합: {result['left_sum']:.2f}")
+        st.write(f"우측 리만 합: {result['right_sum']:.2f}")
+        st.write(f"리만 합 차이: {result['difference']:.2f}")
 
 if __name__ == "__main__":
     app()
