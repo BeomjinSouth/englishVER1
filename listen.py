@@ -12,7 +12,7 @@ def app():
     st.markdown(
         """
         <style>
-        p{font-size: 14px;text-align: right;}
+        p{font-size: 14px;text-align: left;}
         h1{font-size: 36px;}
         div.stButton > button, div.stDownloadButton > button {
             height: 54px;
@@ -85,7 +85,7 @@ def app():
     else:
         client = OpenAI(api_key=api_key)
 
-        st.title("듣기평가 음원 만들기: En Listen")
+        st.title("듣기평가 음원 만들기")
         st.markdown('제작 : 교사 박범진, <br>참고 소스코드 : 박현수 선생님', unsafe_allow_html=True)
 
         col_speed, col_subheader = st.columns([5, 7])
