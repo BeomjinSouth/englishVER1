@@ -34,6 +34,7 @@ def app():
         if st.button("그림 모두 지우기"):
             results.clear()
             st.write("모든 그림이 제거되었습니다. 페이지를 새로 고침하세요.")
+
 def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     x = sp.symbols('x')
     f = sp.lambdify(x, func, 'numpy')
@@ -43,8 +44,7 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     left_riemann_sum = np.sum(y_vals[:-1] * delta_x)
     right_riemann_sum = np.sum(y_vals[1:] * delta_x)
 
-    # 그림 크기를 4x4 인치로 명시적으로 설정
-    fig, ax = plt.subplots(figsize=(3, 3))  # 여기서 크기를 지정합니다.
+    fig, ax = plt.subplots(figsize=(3, 3))  # 그림 크기를 3x3 인치로 설정
     x_plot = np.linspace(x_inf, x_sup, 1000)
     y_plot = f(x_plot)
 
@@ -61,12 +61,14 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     return fig, left_riemann_sum, right_riemann_sum
 
 def display_results():
-    for result in results:
-        # use_container_width=False를 설정하여 컨테이너 너비에 맞추지 않음
-        st.pyplot(result["fig"], use_container_width=False)
-        st.write(f"좌측 리만 합: {result['left_sum']:.2f}")
-        st.write(f"우측 리만 합: {result['right_sum']:.2f}")
-        st.write(f"리만 합 차이: {result['difference']:.2f}")
+    num_cols = 2
+    cols = st.columns(num_cols)  # 2단으로 열을 생성
+    for i, result in enumerate(results):
+        with cols[i % num_cols]:  # 2단 순환을 통해 각 열에 결과를 배치
+            st.pyplot(result["fig"], use_container_width=False)
+            st.write(f"좌측 리만 합: {result['left_sum']:.2f}")
+            st.write(f"우측 리만 합: {result['right_sum']:.2f}")
+            st.write(f"리만 합 차이: {result['difference']:.2f}")
 
 if __name__ == "__main__":
     app()
