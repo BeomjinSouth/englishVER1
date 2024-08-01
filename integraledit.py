@@ -3,18 +3,17 @@ import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
 
-# 그림을 저장할 전역 리스트
-figures = []
-
 def app():
     st.title("적분 계산기")
 
-    # Streamlit UI 생성
     st.header("함수와 적분 입력")
     func_input = st.text_input("함수를 입력하세요 (x의 함수):", "x**2")
     x_inf = st.number_input("하한값 (x_inf)을 입력하세요:", value=0.0)
     x_sup = st.number_input("상한값 (x_sup)을 입력하세요:", value=10.0)
     delta_x = st.number_input("리만 합의 델타 x를 입력하세요:", value=1.0, min_value=0.01)
+
+    # 그림을 저장할 리스트
+    figures = []
 
     if '=' in func_input:
         st.error("함수를 입력할 때 'y=' 부분을 제거하고 입력하세요.")
@@ -24,11 +23,15 @@ def app():
 
         if st.button("리만 합 그리기"):
             fig, left_riemann_sum, right_riemann_sum = plot_riemann_sums(func, x_inf, x_sup, delta_x)
-            figures.append(fig)  # 새로운 그림을 리스트에 추가
+            figures.append(fig)  # 그림 저장
 
-            # 저장된 모든 그림을 표시
-            for fig in figures:
-                st.pyplot(fig)
+            # 그림을 열 단위로 표시
+            for i, fig in enumerate(figures):
+                cols = st.columns(2)  # 2단으로 나누기
+                with cols[i % 2]:
+                    st.pyplot(fig)
+                if i % 2 == 1:
+                    st.write(' ')  # 열 바꾸기
 
             st.write(f"좌측 리만 합: {left_riemann_sum}")
             st.write(f"우측 리만 합: {right_riemann_sum}")
@@ -57,6 +60,3 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     ax.set_aspect('equal', adjustable='box')
 
     return fig, left_riemann_sum, right_riemann_sum
-
-if __name__ == "__main__":
-    app()
