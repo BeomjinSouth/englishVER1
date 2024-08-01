@@ -23,24 +23,23 @@ def app():
         if st.button("리만 합 그리기"):
             fig, left_riemann_sum, right_riemann_sum = plot_riemann_sums(func, x_inf, x_sup, delta_x)
             figures.append(fig)  # 그림 저장
-
-            # 저장된 그림을 적절한 위치에 표시
             display_figures()
 
-            st.write(f"좌측 리만 합: {left_riemann_sum}")
-            st.write(f"우측 리만 합: {right_riemann_sum}")
+            difference = abs(left_riemann_sum - right_riemann_sum)
+            st.write(f"좌측 리만 합: {left_riemann_sum:.2f}")
+            st.write(f"우측 리만 합: {right_riemann_sum:.2f}")
+            st.write(f"리만 합 차이: {difference:.2f}")
 
         if st.button("그림 모두 지우기"):
             figures.clear()  # 그림 리스트를 비웁니다.
-            st.experimental_rerun()  # 앱을 재실행하여 화면을 갱신합니다.
-            
+            st.write("모든 그림이 제거되었습니다. 페이지를 새로 고침하세요.")
+
 def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     x = sp.symbols('x')
     f = sp.lambdify(x, func, 'numpy')
     x_vals = np.arange(x_inf, x_sup, delta_x)
     y_vals = f(x_vals)
 
-    # 리만 합 계산
     left_riemann_sum = np.sum(y_vals[:-1] * delta_x)
     right_riemann_sum = np.sum(y_vals[1:] * delta_x)
 
@@ -60,18 +59,17 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
 
     return fig, left_riemann_sum, right_riemann_sum
 
-
 def display_figures():
-    num_cols = 2  # 2단으로 설정
-    rows_needed = (len(figures) + 1) // num_cols  # 필요한 행 계산
+    num_cols = 2
+    rows_needed = (len(figures) + 1) // num_cols
     index = 0
 
     for _ in range(rows_needed):
-        cols = st.columns(num_cols)  # 열 생성
+        cols = st.columns(num_cols)
         for col in cols:
             if index < len(figures):
                 with col:
-                    st.pyplot(figures[index], use_container_width=False)  # 그림 표시
+                    st.pyplot(figures[index], use_container_width=False)
                 index += 1
 
 if __name__ == "__main__":
