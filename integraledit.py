@@ -34,7 +34,6 @@ def app():
         if st.button("그림 모두 지우기"):
             results.clear()
             st.write("모든 그림이 제거되었습니다. 페이지를 새로 고침하세요.")
-
 def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     x = sp.symbols('x')
     f = sp.lambdify(x, func, 'numpy')
@@ -44,7 +43,8 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     left_riemann_sum = np.sum(y_vals[:-1] * delta_x)
     right_riemann_sum = np.sum(y_vals[1:] * delta_x)
 
-    fig, ax = plt.subplots(figsize=(4, 4))
+    # 그림 크기를 4x4 인치로 명시적으로 설정
+    fig, ax = plt.subplots(figsize=(4, 4))  # 여기서 크기를 지정합니다.
     x_plot = np.linspace(x_inf, x_sup, 1000)
     y_plot = f(x_plot)
 
@@ -62,7 +62,8 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
 
 def display_results():
     for result in results:
-        st.pyplot(result["fig"])
+        # use_container_width=False를 설정하여 컨테이너 너비에 맞추지 않음
+        st.pyplot(result["fig"], use_container_width=False)
         st.write(f"좌측 리만 합: {result['left_sum']:.2f}")
         st.write(f"우측 리만 합: {result['right_sum']:.2f}")
         st.write(f"리만 합 차이: {result['difference']:.2f}")
