@@ -33,15 +33,21 @@ def app():
         if st.button("그림 모두 지우기"):
             figures.clear()  # 그림 리스트를 비웁니다.
             st.experimental_rerun()  # 앱을 재실행하여 화면을 갱신합니다.
-
+            
 def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     x = sp.symbols('x')
     f = sp.lambdify(x, func, 'numpy')
     x_vals = np.arange(x_inf, x_sup, delta_x)
     y_vals = f(x_vals)
+
+    # 리만 합 계산
+    left_riemann_sum = np.sum(y_vals[:-1] * delta_x)
+    right_riemann_sum = np.sum(y_vals[1:] * delta_x)
+
     fig, ax = plt.subplots(figsize=(4, 4))
     x_plot = np.linspace(x_inf, x_sup, 1000)
     y_plot = f(x_plot)
+
     ax.plot(x_plot, y_plot, 'r', label='f(x)')
     ax.bar(x_vals[:-1], y_vals[:-1], width=delta_x, align='edge', alpha=0.3, edgecolor='black', label='Left Riemann Sum')
     ax.bar(x_vals[:-1], y_vals[1:], width=delta_x, align='edge', alpha=0.3, edgecolor='black', color='green', label='Right Riemann Sum')
@@ -51,7 +57,9 @@ def plot_riemann_sums(func, x_inf, x_sup, delta_x):
     ax.set_xlim(x_inf, x_sup)
     ax.set_ylim(min(y_plot), max(y_plot))
     ax.set_aspect('equal', adjustable='box')
+
     return fig, left_riemann_sum, right_riemann_sum
+
 
 def display_figures():
     num_cols = 2  # 2단으로 설정
