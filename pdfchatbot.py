@@ -3,16 +3,13 @@ import pdfplumber
 import io
 from openai import OpenAI
 
-def app():  # app 함수 정의
-    # Streamlit 세션 상태 초기화
+def app():
     if 'knowledge_base' not in st.session_state:
         st.session_state.knowledge_base = ""
 
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
     st.title("설계안 도우미 챗봇 - 성호중 박범진")
 
-    # PDF 파일 업로드
     uploaded_file = st.file_uploader("PDF 파일을 업로드하세요", type=['pdf'])
     if uploaded_file is not None:
         with pdfplumber.open(io.BytesIO(uploaded_file.getvalue())) as pdf:
@@ -25,13 +22,23 @@ def app():  # app 함수 정의
             st.session_state.knowledge_base = text
             st.write("PDF에서 추출된 내용이 지식 베이스로 저장되었습니다.")
 
-    # 사용자 질문 입력 및 처리
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
     user_query = st.text_input("질문을 입력하세요:")
     if user_query:
-        prompt = f"다음 문서 내용을 바탕으로 질문에 답해주세요:\n{st.session_state.knowledge_base}\n질문: {user_query}"
-        response = client.Completion.create(
-            model="gpt-4o",
-            prompt=prompt,
-            max_tokens=1024
-        )
-        st.write("GPT-4의 답변:", response['choices'][0]['text'])
+        st.session_state.chat_history.append({"role": "user", "content": user_query})
+
+        with st.spinner('AI가 답변을 생성 중입니다...'):
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=st.session_state.chat_history,
+                max_tokens=1024
+            )
+        
+        st.session_state.chat_history.append({"role": "assistant", "content": response['choices'][0]['message']['content']})
+        
+        for message in st.session_state.chat_history[-2:]:  # 최근 사용자 및 AI 응답만 표시
+            role = "user" if message['role'] == "user" else "assistant"
+            with st.chat_message(role):
+                st.markdown(message['content'])
