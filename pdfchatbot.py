@@ -25,20 +25,25 @@ def app():
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    user_query = st.text_input("질문을 입력하세요:")
+    user_query = st.text_input("질문을 입력하세요:", key="query_input")
     if user_query:
         st.session_state.chat_history.append({"role": "user", "content": user_query})
 
-        with st.spinner('AI가 답변을 생성 중입니다...'):
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=st.session_state.chat_history,
-                max_tokens=1024
-            )
-        
-        st.session_state.chat_history.append({"role": "assistant", "content": response['choices'][0]['message']['content']})
-        
-        for message in st.session_state.chat_history[-2:]:  # 최근 사용자 및 AI 응답만 표시
-            role = "user" if message['role'] == "user" else "assistant"
-            with st.chat_message(role):
-                st.markdown(message['content'])
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.chat_history],
+            max_tokens=1024
+        )
+        response_text = response['choices'][0]['message']['content']
+        st.session_state.chat_history.append({"role": "assistant", "content": response_text})
+
+        # 입력 필드를 비우기
+        st.session_state["query_input"] = ""
+
+    # 메시지 출력
+    for message in st.session_state.chat_history:
+        role = "user" if message['role'] == "user" else "assistant"
+        if role == "user":
+            st.info(message["content"])
+        else:
+            st.success(message["content"])
