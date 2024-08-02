@@ -4,7 +4,7 @@ import io
 from openai import OpenAI
 
 # OpenAI API 키 설정
-client = OpenAI(api_key=st.secrets["OPENAI"]["OPENAI_API_KEY"])
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # Streamlit 앱 구성
 st.title("수업 설계 도우미 챗봇")
