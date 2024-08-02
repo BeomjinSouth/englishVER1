@@ -34,7 +34,8 @@ def app():
             messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.chat_history],
             max_tokens=1024
         )
-        response_text = response['choices'][0]['message']['content']
+        # response_text를 response.choices[0].text로 수정
+        response_text = response.choices[0].text
         st.session_state.chat_history.append({"role": "assistant", "content": response_text})
 
         # 입력 필드를 비우기
