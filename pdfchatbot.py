@@ -6,8 +6,10 @@ from openai import OpenAI
 # Streamlit 세션 상태 초기화
 if 'knowledge_base' not in st.session_state:
     st.session_state.knowledge_base = ""
+    
+api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=api_key)
 
-client = OpenAI(api_key=st.secrets["OPENAI"]["OPENAI_API_KEY"])
 
 st.title("설계안 도우미 챗봇 - 성호중 박범진")
 
