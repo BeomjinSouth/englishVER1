@@ -6,3 +6,6 @@ numpy
 sympy
 matplotlib
 pdfplumber
+scipy
+scikit-learn
+pillow
