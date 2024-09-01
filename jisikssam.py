@@ -8,35 +8,30 @@ from email.mime.multipart import MIMEMultipart
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def app():
-    import streamlit as st
-    from openai import OpenAI
-
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
     st.title("설계안 도우미 챗봇 - 성호중 박범진")
 
+    # 사용자 세션 상태 초기화
     if "openai_model" not in st.session_state:
         st.session_state["openai_model"] = "gpt-4o"
-
-    system_message = '''
-    '''
-
     if "design_messages" not in st.session_state:
         st.session_state.design_messages = []
 
-    if len(st.session_state.design_messages) == 0:
-        st.session_state.design_messages = [{"role": "system", "content": system_message}]
+    # 사용자 입력받기
+    subject = st.selectbox('과목을 선택하세요', ['수학', '과학', '역사'])
+    topic = st.text_input('원하는 주제를 입력하세요')
+    num_questions = st.number_input('문항 개수를 선택하세요', min_value=1, max_value=10, value=3)
+    difficulty = st.selectbox('난이도를 선택하세요', ['쉬움', '보통', '어려움'])
+    question_type = st.selectbox('문항 유형을 선택하세요', ['논술형', '객관식'])
 
-    for idx, message in enumerate(st.session_state.design_messages):
-        if idx > 0:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-    if prompt := st.chat_input("안녕하세요?"):
+    # 문항 생성 요청
+    if st.button('생성하기'):
+        prompt = f"{subject} 과목에서 '{topic}' 주제의 {num_questions}개의 문항을 생성해줘. 난이도는 {difficulty}이고, 문항 유형은 {question_type}이다."
         st.session_state.design_messages.append({"role": "user", "content": prompt})
+        
         with st.chat_message("user"):
             st.markdown(prompt)
 
+        # GPT 응답 생성 및 출력
         with st.chat_message("assistant"):
             stream = client.chat.completions.create(
                 model=st.session_state["openai_model"],
@@ -46,14 +41,14 @@ def app():
                 ],
                 stream=True,
             )
-            response = ""
+
+            response_content = ""
             for chunk in stream:
-                content = chunk.choices[0].delta.content if hasattr(chunk.choices[0].delta, 'content') else ''
-                st.write(content, end="")
-                response += content
+                content = chunk.choices[0].delta.get('content', '')
+                response_content += content
+                st.write(content)
 
-        st.session_state.design_messages.append({"role": "assistant", "content": response})
-
+            st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
     # 학생의 답변과 평가 주고받기
     if '응답 완료' in st.session_state:
