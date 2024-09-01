@@ -1,39 +1,13 @@
 import streamlit as st
 import json
 from datetime import datetime
-from openai import OpenAI
+from openai import OpenAI  # 여기서 OpenAI 클래스를 가져옵니다.
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # OpenAI API 키 설정
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
-# 계정 데이터 로드
-def load_accounts():
-    try:
-        with open("accounts.json", "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {}
-
-# 계정 데이터 저장
-def save_accounts(accounts):
-    with open("accounts.json", "w") as file:
-        json.dump(accounts, file)
-
-# 학습 데이터 로드
-def load_learning_data():
-    try:
-        with open("learning_data.json", "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {}
-
-# 학습 데이터 저장
-def save_learning_data(learning_data):
-    with open("learning_data.json", "w") as file:
-        json.dump(learning_data, file)
 
 def app():
     st.title("성호중 박범진")
@@ -70,7 +44,7 @@ def app():
             with st.chat_message("assistant"):
                 try:
                     response_content = ""
-                    stream = openai.ChatCompletion.create(
+                    stream = client.chat.completions.create(
                         model=st.session_state["openai_model"],
                         messages=[
                             {"role": m["role"], "content": m["content"]}
@@ -108,7 +82,7 @@ def app():
                     st.session_state.design_messages.append({"role": "user", "content": evaluation_prompt})
 
                     response_content = ""
-                    stream = openai.ChatCompletion.create(
+                    stream = client.chat.completions.create(
                         model=st.session_state["openai_model"],
                         messages=[
                             {"role": m["role"], "content": m["content"]}
