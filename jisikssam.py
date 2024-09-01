@@ -122,7 +122,7 @@ def app():  # 이 함수가 app.py에서 호출됩니다.
             if email in accounts and accounts[email] == password:
                 st.session_state['logged_in'] = True
                 st.session_state['email'] = email
-                st.experimental_rerun()  # 로그인 후 화면 새로고침
+                st.experimental_rerun()  # 로그인 후 화면 새로고침 대신 삭제
             else:
                 st.error("이메일 또는 비밀번호가 일치하지 않습니다.")
 
