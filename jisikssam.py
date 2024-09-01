@@ -95,8 +95,6 @@ def app():
             st.session_state.design_messages = []  # 메시지 히스토리 초기화
         if "question_generated" not in st.session_state:
             st.session_state["question_generated"] = False  # 문제 생성 상태 초기화
-        if "discussion_mode" not in st.session_state:
-            st.session_state["discussion_mode"] = False  # 논의 모드 상태 초기화
 
         # 대분류 선택
         main_category = st.selectbox("대분류를 선택하세요", list(topics.keys()))
@@ -141,8 +139,13 @@ def app():
                 except Exception as e:
                     st.error(f"오류가 발생했습니다: {e}")
 
-        # 학생의 답변 또는 질문을 위한 텍스트 박스 표시
+        # 기존 대화 내역 표시
         if st.session_state.get("question_generated"):
+            for message in st.session_state.design_messages:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
+
+            # 학생의 답변 또는 질문을 위한 텍스트 박스 표시
             student_input = st.text_area('여기에 질문이나 답변을 입력하세요')
             
             # '질문하기', '힌트 요청', '토의하기' 버튼을 눌렀을 때의 처리
@@ -201,4 +204,55 @@ def app():
                     send_email(st.session_state['email'], "평가 결과", response)
                     st.success("평가가 완료되었으며 학생의 이메일로 전송되었습니다.")
                 except smtplib.SMTPAuthenticationError:
-                   
+                    st.error("이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요.")
+
+                # 학습 데이터를 저장
+                learning_data = load_learning_data()
+                email = st.session_state['email']
+                if email not in learning_data:
+                    learning_data[email] = []
+
+                learning_data[email].append({
+                    "timestamp": str(datetime.now()),
+                    "subject": main_category,
+                    "sub_topic": sub_category,
+                    "specific_topic": topic,
+                    "questions": response,
+                    "responses": student_input,
+                    "evaluation": response
+                })
+                save_learning_data(learning_data)
+
+                # 상태를 초기화하여 다음 입력을 받을 준비를 합니다.
+                st.session_state['response_complete'] = False
+                st.session_state["question_generated"] = False
+
+    else:
+        # 로그인하지 않은 상태에서 로그인 및 계정 생성 화면을 표시합니다.
+        st.header("로그인 또는 계정 생성")
+
+        email = st.text_input("이메일을 입력하세요")
+        password = st.text_input("비밀번호를 입력하세요", type="password")
+
+        accounts = load_accounts()
+
+        # 사용자가 입력한 이메일과 비밀번호를 확인하여 로그인 처리합니다.
+        if st.button("로그인"):
+            if email in accounts and accounts[email] == password:
+                st.session_state['logged_in'] = True
+                st.session_state['email'] = email  # 로그인한 사용자의 이메일을 세션 상태에 저장
+                st.experimental_set_query_params(logged_in="true")
+            else:
+                st.error("이메일 또는 비밀번호가 일치하지 않습니다.")
+
+        # 계정을 새로 생성합니다.
+        if st.button("계정 등록"):
+            if email in accounts:
+                st.error("이미 존재하는 이메일입니다.")
+            else:
+                accounts[email] = password
+                save_accounts(accounts)
+                st.success("계정이 성공적으로 등록되었습니다.")
+
+if __name__ == "__main__":
+    app()
