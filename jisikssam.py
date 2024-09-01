@@ -11,7 +11,7 @@ def app():
     import streamlit as st
     from openai import OpenAI
 
-    client = OpenAI(api_key=st.secrets["OPENAI"]["OPENAI_API_KEY"])
+    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
     st.title("설계안 도우미 챗봇 - 성호중 박범진")
 
