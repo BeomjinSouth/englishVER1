@@ -46,7 +46,7 @@ def send_email(to_email, subject, body):
     # SMTP 서버 설정 (Gmail을 사용)
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
-    smtp_user = "your_email@gmail.com"  # 실제 Gmail 주소로 변경하세요.
+    smtp_user = "pbj950418@gmail.com"  # 실제 Gmail 주소로 변경하세요.
     smtp_password = st.secrets["EMAIL_PASSWORD"]  # 비밀번호는 secrets에서 불러옵니다.
 
     # 이메일 메시지 작성
