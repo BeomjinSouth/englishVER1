@@ -145,25 +145,23 @@ def app():
         # 기존 대화 내역 표시
         if st.session_state.get("question_generated"):
             for message in st.session_state.design_messages:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+                if message["role"] != "user":
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
 
             # 학생의 답변 또는 질문을 위한 텍스트 박스 표시
             student_input = st.text_area('여기에 질문이나 답변을 입력하세요')
             
             # '질문하기', '힌트 요청', '토의하기' 버튼을 눌렀을 때의 처리
-            if st.button('질문하기') or st.button('힌트 요청') or st.button('토의하기'):
+            if st.button('질문하기'):
                 st.session_state.design_messages.append({"role": "user", "content": student_input})
 
-                # 사용자에게 입력한 질문이나 요청을 표시합니다.
+                # 사용자에게 입력한 질문을 표시합니다.
                 with st.chat_message("user"):
                     st.markdown(student_input)
 
                 # GPT와의 대화를 이어갑니다.
                 with st.chat_message("assistant"):
-                    followup_prompt = f"학생이 질문하거나 요청했습니다: {student_input}"
-                    st.session_state.design_messages.append({"role": "user", "content": followup_prompt})
-
                     stream = client.chat.completions.create(
                         model=st.session_state["openai_model"],
                         messages=[
@@ -176,8 +174,47 @@ def app():
                     response = st.write_stream(stream)
                     st.session_state.design_messages.append({"role": "assistant", "content": response})
 
-                # 대화가 이어지도록 새로운 텍스트 입력 칸 제공
-                student_input = st.text_area('여기에 계속 질문이나 답변을 입력하세요')
+            if st.button('힌트 요청'):
+                st.session_state.design_messages.append({"role": "user", "content": student_input})
+
+                # 사용자에게 입력한 요청을 표시합니다.
+                with st.chat_message("user"):
+                    st.markdown(student_input)
+
+                # GPT와의 대화를 이어갑니다.
+                with st.chat_message("assistant"):
+                    stream = client.chat.completions.create(
+                        model=st.session_state["openai_model"],
+                        messages=[
+                            {"role": m["role"], "content": m["content"]}
+                            for m in st.session_state.design_messages
+                        ],
+                        stream=True,
+                    )
+
+                    response = st.write_stream(stream)
+                    st.session_state.design_messages.append({"role": "assistant", "content": response})
+
+            if st.button('토의하기'):
+                st.session_state.design_messages.append({"role": "user", "content": student_input})
+
+                # 사용자에게 입력한 요청을 표시합니다.
+                with st.chat_message("user"):
+                    st.markdown(student_input)
+
+                # GPT와의 대화를 이어갑니다.
+                with st.chat_message("assistant"):
+                    stream = client.chat.completions.create(
+                        model=st.session_state["openai_model"],
+                        messages=[
+                            {"role": m["role"], "content": m["content"]}
+                            for m in st.session_state.design_messages
+                        ],
+                        stream=True,
+                    )
+
+                    response = st.write_stream(stream)
+                    st.session_state.design_messages.append({"role": "assistant", "content": response})
 
             # '평가 요청' 버튼을 추가합니다.
             if st.button('평가 요청'):
