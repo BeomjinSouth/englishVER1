@@ -35,8 +35,30 @@ def save_learning_data(learning_data):
     with open("learning_data.json", "w") as file:
         json.dump(learning_data, file)
 
+def send_email(to_email, evaluation_content):
+    # SMTP 서버 설정 (이 예제에서는 Gmail을 사용)
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    smtp_user = "your_email@example.com"
+    smtp_password = st.secrets["EMAIL_PASSWORD"]
+
+    # 이메일 메시지 작성
+    msg = MIMEMultipart()
+    msg['From'] = smtp_user
+    msg['To'] = to_email
+    msg['Subject'] = "GPT 학습 평가 결과"
+
+    body = MIMEText(evaluation_content, 'plain')
+    msg.attach(body)
+
+    # 이메일 전송
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, to_email, msg.as_string())
+
 def app():
-    st.title("성호중 박범진")
+    st.title("학습 도우미 시스템")
 
     # 로그인 상태를 체크하기 위한 세션 상태 변수
     if 'logged_in' not in st.session_state:
@@ -83,14 +105,15 @@ def app():
                         ],
                         stream=True,
                     )
+
                     for chunk in stream:
                         if 'content' in chunk.choices[0].delta:
                             content = chunk.choices[0].delta['content']
                             response_content += content
                             st.write(content)
-           
+
                     st.session_state.design_messages.append({"role": "assistant", "content": response_content})
-                
+
                 except Exception as e:
                     st.error(f"오류가 발생했습니다: {e}")
 
@@ -123,9 +146,10 @@ def app():
                     )
 
                     for chunk in stream:
-                        content = chunk.choices[0].delta.get('content', '')
-                        response_content += content
-                        st.write(content)
+                        if 'content' in chunk.choices[0].delta:
+                            content = chunk.choices[0].delta['content']
+                            response_content += content
+                            st.write(content)
 
                     st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
@@ -177,28 +201,6 @@ def app():
                 accounts[email] = password
                 save_accounts(accounts)
                 st.success("계정이 성공적으로 등록되었습니다.")
-
-def send_email(to_email, evaluation_content):
-    # SMTP 서버 설정 (이 예제에서는 Gmail을 사용)
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
-    smtp_user = "your_email@example.com"
-    smtp_password = st.secrets["EMAIL_PASSWORD"]
-
-    # 이메일 메시지 작성
-    msg = MIMEMultipart()
-    msg['From'] = smtp_user
-    msg['To'] = to_email
-    msg['Subject'] = "GPT 학습 평가 결과"
-
-    body = MIMEText(evaluation_content, 'plain')
-    msg.attach(body)
-
-    # 이메일 전송
-    with smtplib.SMTP(smtp_server, smtp_port) as server:
-        server.starttls()
-        server.login(smtp_user, smtp_password)
-        server.sendmail(smtp_user, to_email, msg.as_string())
 
 if __name__ == "__main__":
     app()
