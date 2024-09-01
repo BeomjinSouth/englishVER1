@@ -6,53 +6,60 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# OpenAI API 키 설정 (Streamlit secrets를 통해 API 키를 불러옵니다)
+# OpenAI API 키 설정
+# Streamlit의 secrets 기능을 통해 API 키를 안전하게 불러옵니다.
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# 계정 데이터 로드 함수 - 계정 정보를 저장한 JSON 파일을 불러옵니다
+# 계정 데이터를 로드하는 함수
+# JSON 파일에 저장된 계정 데이터를 불러옵니다.
 def load_accounts():
     try:
         with open("accounts.json", "r") as file:
             return json.load(file)
     except FileNotFoundError:
-        return {}
+        return {}  # 파일이 없을 경우 빈 딕셔너리를 반환합니다.
 
-# 계정 데이터 저장 함수 - 새로 생성된 계정 정보를 JSON 파일에 저장합니다
+# 계정 데이터를 저장하는 함수
+# 새로 생성된 계정 정보를 JSON 파일에 저장합니다.
 def save_accounts(accounts):
     with open("accounts.json", "w") as file:
         json.dump(accounts, file)
 
-# 학습 데이터 로드 함수 - 사용자의 학습 기록을 불러옵니다
+# 학습 데이터를 로드하는 함수
+# JSON 파일에 저장된 사용자의 학습 기록을 불러옵니다.
 def load_learning_data():
     try:
         with open("learning_data.json", "r") as file:
             return json.load(file)
     except FileNotFoundError:
-        return {}
+        return {}  # 파일이 없을 경우 빈 딕셔너리를 반환합니다.
 
-# 학습 데이터 저장 함수 - 사용자의 학습 기록을 JSON 파일에 저장합니다
+# 학습 데이터를 저장하는 함수
+# 사용자의 학습 기록을 JSON 파일에 저장합니다.
 def save_learning_data(learning_data):
     with open("learning_data.json", "w") as file:
         json.dump(learning_data, file)
 
-# 이메일 전송 함수 - 사용자의 학습 결과를 이메일로 전송합니다
-def send_email(to_email, evaluation_content):
-    # SMTP 서버 설정 (이 예제에서는 Gmail을 사용)
+# 이메일을 전송하는 함수
+# SMTP 서버를 통해 이메일을 전송합니다.
+def send_email(to_email, subject, body):
+    # SMTP 서버 설정 (Gmail을 사용)
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
-    smtp_user = "your_email@gmail.com"  # 본인의 Gmail 주소로 변경
+    smtp_user = "your_email@gmail.com"  # 실제 Gmail 주소로 변경하세요.
     smtp_password = st.secrets["EMAIL_PASSWORD"]  # 비밀번호는 secrets에서 불러옵니다.
 
     # 이메일 메시지 작성
     msg = MIMEMultipart()
-    msg['From'] = smtp_user
-    msg['To'] = to_email
-    msg['Subject'] = "GPT 학습 평가 결과"
+    msg['From'] = smtp_user  # 보내는 사람의 이메일 주소
+    msg['To'] = to_email  # 받는 사람의 이메일 주소
+    msg['Subject'] = subject  # 이메일 제목
 
-    body = MIMEText(evaluation_content, 'plain')
+    # 이메일 본문 작성
+    body = MIMEText(body, 'plain')
     msg.attach(body)
 
-    # 이메일 전송 - SMTP 서버에 연결하여 이메일을 전송합니다
+    # SMTP 서버에 연결하여 이메일을 전송합니다.
     with smtplib.SMTP(smtp_server, smtp_port) as server:
         server.starttls()  # TLS (Transport Layer Security) 시작
         server.login(smtp_user, smtp_password)  # SMTP 서버에 로그인
@@ -62,11 +69,11 @@ def send_email(to_email, evaluation_content):
 def app():
     st.title("학습 도우미 시스템")
 
-    # 로그인 상태를 체크하기 위한 세션 상태 변수 초기화
+    # 로그인 상태를 확인하기 위한 세션 상태 변수 초기화
     if 'logged_in' not in st.session_state:
         st.session_state['logged_in'] = False
 
-    # 사용자가 로그인 상태인지 확인하고 로그인 후 화면을 표시
+    # 사용자가 로그인한 상태인지 확인하여 다른 화면을 표시합니다.
     if st.session_state['logged_in']:
         st.success(f"{st.session_state['email']}님, 환영합니다!")
 
@@ -78,23 +85,24 @@ def app():
         if "question_generated" not in st.session_state:
             st.session_state["question_generated"] = False  # 문제 생성 상태 초기화
 
-        # 사용자 입력 받기 - 학습 과목, 주제, 문항 개수, 난이도, 문항 유형
+        # 사용자로부터 학습 과목, 주제, 문항 개수, 난이도, 문항 유형을 입력받습니다.
         subject = st.selectbox('과목을 선택하세요', ['수학', '과학', '역사'])
         topic = st.text_input('원하는 주제를 입력하세요')
         num_questions = st.number_input('문항 개수를 선택하세요', min_value=1, max_value=10, value=3)
         difficulty = st.selectbox('난이도를 선택하세요', ['쉬움', '보통', '어려움'])
         question_type = st.selectbox('문항 유형을 선택하세요', ['논술형', '객관식'])
 
-        # GPT API를 사용해 문항을 생성 요청
+        # 사용자가 '생성하기' 버튼을 눌렀을 때, GPT API를 호출하여 문항을 생성합니다.
         if st.button('생성하기'):
+            # 사용자가 선택한 과목, 주제, 문항 개수, 난이도, 문항 유형을 포함한 프롬프트 생성
             prompt = f"{subject} 과목에서 '{topic}' 주제의 {num_questions}개의 문항을 생성해줘. 난이도는 {difficulty}이고, 문항 유형은 {question_type}이다."
             st.session_state.design_messages.append({"role": "user", "content": prompt})
 
-            # 사용자에게 프롬프트를 표시
+            # 사용자에게 입력한 프롬프트를 표시합니다.
             with st.chat_message("user"):
                 st.markdown(prompt)
 
-            # GPT 응답을 생성하여 출력
+            # GPT API를 호출하여 생성된 문항을 출력합니다.
             with st.chat_message("assistant"):
                 try:
                     stream = client.chat.completions.create(
@@ -106,7 +114,7 @@ def app():
                         stream=True,
                     )
 
-                    # Streamlit의 최신 기능 사용
+                    # Streamlit의 최신 기능을 사용하여 스트리밍된 응답을 출력합니다.
                     response = st.write_stream(stream)
                     st.session_state.design_messages.append({"role": "assistant", "content": response})
                     st.session_state["question_generated"] = True  # 문제 생성 상태 갱신
@@ -114,17 +122,18 @@ def app():
                 except Exception as e:
                     st.error(f"오류가 발생했습니다: {e}")
 
-        # 학생의 답변 제출 및 평가
+        # 문제가 생성된 후에만 학생의 답변을 입력할 수 있는 텍스트 박스를 표시합니다.
         if st.session_state.get("question_generated"):
             student_answer = st.text_area('여기에 답변을 입력하세요')
             if st.button('제출'):
-                # 학생의 답변을 세션 상태에 저장
+                # 학생이 제출한 답변을 세션 상태에 저장합니다.
                 st.session_state.design_messages.append({"role": "user", "content": student_answer})
 
+                # 사용자에게 입력한 답변을 표시합니다.
                 with st.chat_message("user"):
                     st.markdown(student_answer)
 
-                # GPT에게 학생의 답변을 평가하도록 요청
+                # GPT API를 호출하여 학생의 답변을 평가합니다.
                 with st.chat_message("assistant"):
                     evaluation_prompt = f"학생의 답변을 평가해주세요: {student_answer}"
                     st.session_state.design_messages.append({"role": "user", "content": evaluation_prompt})
@@ -141,14 +150,19 @@ def app():
                     response = st.write_stream(stream)
                     st.session_state.design_messages.append({"role": "assistant", "content": response})
 
-                # 평가 결과를 이메일로 전송
+                # 선생님에게 전체 대화 내역을 이메일로 전송합니다.
+                teacher_email = "teacher_email@gmail.com"  # 선생님의 이메일로 변경하세요.
+                all_messages = "\n\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.design_messages])
+                send_email(teacher_email, "학생과의 대화 내역", all_messages)
+
+                # 학생에게 평가 결과를 이메일로 전송합니다.
                 try:
-                    send_email(st.session_state['email'], response)
-                    st.success("평가가 완료되었으며 이메일로 전송되었습니다.")
+                    send_email(st.session_state['email'], "평가 결과", response)
+                    st.success("평가가 완료되었으며 학생의 이메일로 전송되었습니다.")
                 except smtplib.SMTPAuthenticationError:
                     st.error("이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요.")
 
-                # 학습 데이터를 저장
+                # 학습 데이터를 저장합니다.
                 learning_data = load_learning_data()
                 email = st.session_state['email']
                 if email not in learning_data:
@@ -164,12 +178,12 @@ def app():
                 })
                 save_learning_data(learning_data)
 
-                # 상태 리셋
+                # 상태를 초기화하여 다음 입력을 받을 준비를 합니다.
                 st.session_state['response_complete'] = False
                 st.session_state["question_generated"] = False
 
     else:
-        # 로그인하지 않은 상태에서 로그인 및 계정 생성 화면 표시
+        # 로그인하지 않은 상태에서 로그인 및 계정 생성 화면을 표시합니다.
         st.header("로그인 또는 계정 생성")
 
         email = st.text_input("이메일을 입력하세요")
@@ -177,16 +191,16 @@ def app():
 
         accounts = load_accounts()
 
-        # 로그인 처리
+        # 사용자가 입력한 이메일과 비밀번호를 확인하여 로그인 처리합니다.
         if st.button("로그인"):
             if email in accounts and accounts[email] == password:
                 st.session_state['logged_in'] = True
-                st.session_state['email'] = email  # 세션 상태에 이메일 저장
+                st.session_state['email'] = email  # 로그인한 사용자의 이메일을 세션 상태에 저장
                 st.experimental_set_query_params(logged_in="true")
             else:
                 st.error("이메일 또는 비밀번호가 일치하지 않습니다.")
 
-        # 계정 등록 처리
+        # 계정을 새로 생성합니다.
         if st.button("계정 등록"):
             if email in accounts:
                 st.error("이미 존재하는 이메일입니다.")
