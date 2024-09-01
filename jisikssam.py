@@ -112,6 +112,9 @@ def app():
 
         # GPT API를 사용해 문항을 생성 요청
         if st.button('생성하기'):
+            # 이전 대화 초기화
+            st.session_state.design_messages = []
+            
             prompt = f"{main_category} - {sub_category}: '{topic}' 주제의 {num_questions}개의 문항을 생성해줘. 난이도는 {difficulty}이고, 문항 유형은 {question_type}이다."
             st.session_state.design_messages.append({"role": "user", "content": prompt})
 
@@ -172,6 +175,9 @@ def app():
 
                     response = st.write_stream(stream)
                     st.session_state.design_messages.append({"role": "assistant", "content": response})
+
+                # 대화가 이어지도록 새로운 텍스트 입력 칸 제공
+                student_input = st.text_area('여기에 계속 질문이나 답변을 입력하세요')
 
             # '평가 요청' 버튼을 추가합니다.
             if st.button('평가 요청'):
