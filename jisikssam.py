@@ -40,7 +40,7 @@ def send_email(to_email, subject, body):
     # SMTP 서버 설정 (Gmail을 사용)
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
-    smtp_user = "pbj950418@gmail.com"  # 실제 Gmail 주소로 변경하세요.
+    smtp_user = "your_email@gmail.com"  # 실제 Gmail 주소로 변경하세요.
     smtp_password = st.secrets["EMAIL_PASSWORD"]  # 비밀번호는 secrets에서 불러옵니다.
 
     # 이메일 메시지 작성
@@ -141,21 +141,21 @@ def app():
                 except Exception as e:
                     st.error(f"오류가 발생했습니다: {e}")
 
-        # 문제가 생성된 후에만 학생의 답변을 입력할 수 있는 텍스트 박스를 표시합니다.
+        # 학생의 답변 또는 질문을 위한 텍스트 박스 표시
         if st.session_state.get("question_generated"):
-            student_answer = st.text_area('여기에 답변을 입력하세요')
-
-            # 학생이 질문하거나, 힌트를 요청하거나, 논의를 이어가고자 할 때
+            student_input = st.text_area('여기에 질문이나 답변을 입력하세요')
+            
+            # '질문하기', '힌트 요청', '토의하기' 버튼을 눌렀을 때의 처리
             if st.button('질문하기') or st.button('힌트 요청') or st.button('토의하기'):
-                st.session_state.design_messages.append({"role": "user", "content": student_answer})
+                st.session_state.design_messages.append({"role": "user", "content": student_input})
 
                 # 사용자에게 입력한 질문이나 요청을 표시합니다.
                 with st.chat_message("user"):
-                    st.markdown(student_answer)
+                    st.markdown(student_input)
 
                 # GPT와의 대화를 이어갑니다.
                 with st.chat_message("assistant"):
-                    followup_prompt = f"학생이 질문했습니다: {student_answer}"
+                    followup_prompt = f"학생이 질문하거나 요청했습니다: {student_input}"
                     st.session_state.design_messages.append({"role": "user", "content": followup_prompt})
 
                     stream = client.chat.completions.create(
@@ -169,13 +169,14 @@ def app():
 
                     response = st.write_stream(stream)
                     st.session_state.design_messages.append({"role": "assistant", "content": response})
-                    st.session_state["discussion_mode"] = True  # 논의 모드로 전환
 
-            # 평가를 요청하는 버튼을 추가합니다.
+            # '평가 요청' 버튼을 추가합니다.
             if st.button('평가 요청'):
-                # GPT에게 학생의 답변을 평가하도록 요청
+                # GPT에게 학생의 답변을 평가하도록 요청합니다.
+                st.session_state.design_messages.append({"role": "user", "content": student_input})
+
                 with st.chat_message("assistant"):
-                    evaluation_prompt = f"학생의 답변을 평가해주세요: {student_answer}"
+                    evaluation_prompt = f"학생의 답변을 평가해주세요: {student_input}"
                     st.session_state.design_messages.append({"role": "user", "content": evaluation_prompt})
 
                     stream = client.chat.completions.create(
@@ -200,56 +201,4 @@ def app():
                     send_email(st.session_state['email'], "평가 결과", response)
                     st.success("평가가 완료되었으며 학생의 이메일로 전송되었습니다.")
                 except smtplib.SMTPAuthenticationError:
-                    st.error("이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요.")
-
-                # 학습 데이터를 저장
-                learning_data = load_learning_data()
-                email = st.session_state['email']
-                if email not in learning_data:
-                    learning_data[email] = []
-
-                learning_data[email].append({
-                    "timestamp": str(datetime.now()),
-                    "subject": main_category,
-                    "sub_topic": sub_category,
-                    "specific_topic": topic,
-                    "questions": response,
-                    "responses": student_answer,
-                    "evaluation": response
-                })
-                save_learning_data(learning_data)
-
-                # 상태를 초기화하여 다음 입력을 받을 준비를 합니다.
-                st.session_state['response_complete'] = False
-                st.session_state["question_generated"] = False
-                st.session_state["discussion_mode"] = False
-
-    else:
-        # 로그인하지 않은 상태에서 로그인 및 계정 생성 화면을 표시합니다.
-        st.header("로그인 또는 계정 생성")
-
-        email = st.text_input("이메일을 입력하세요")
-        password = st.text_input("비밀번호를 입력하세요", type="password")
-
-        accounts = load_accounts()
-
-        # 사용자가 입력한 이메일과 비밀번호를 확인하여 로그인 처리합니다.
-        if st.button("로그인"):
-            if email in accounts and accounts[email] == password:
-                st.session_state['logged_in'] = True
-                st.session_state['email'] = email  # 로그인한 사용자의 이메일을 세션 상태에 저장
-                st.experimental_set_query_params(logged_in="true")
-            else:
-                st.error("이메일 또는 비밀번호가 일치하지 않습니다.")
-
-        # 계정을 새로 생성합니다.
-        if st.button("계정 등록"):
-            if email in accounts:
-                st.error("이미 존재하는 이메일입니다.")
-            else:
-                accounts[email] = password
-                save_accounts(accounts)
-                st.success("계정이 성공적으로 등록되었습니다.")
-
-if __name__ == "__main__":
-    app()
+                   
