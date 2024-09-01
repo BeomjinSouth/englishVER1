@@ -40,7 +40,7 @@ def send_email(to_email, evaluation_content):
     # SMTP 서버 설정 (이 예제에서는 Gmail을 사용)
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
-    smtp_user = "your_email@gmail.com"  # 본인의 Gmail 주소로 변경
+    smtp_user = "pbj950418@gmail.com"  # 본인의 Gmail 주소로 변경
     smtp_password = st.secrets["EMAIL_PASSWORD"]  # 비밀번호는 secrets에서 불러옵니다.
 
     # 이메일 메시지 작성
