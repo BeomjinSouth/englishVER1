@@ -4,6 +4,7 @@ import integral
 import integraledit  # integraledit 모듈 불러오기
 import pdfchatbot
 import triangle  # triangle 모듈 불러오기
+import jisikssam  # jisikssam 모듈 불러오기
 
 st.set_page_config(
     page_title="Multi App",
@@ -17,7 +18,8 @@ PAGES = {
     "Integral": integral,
     "적분 계산기": integraledit,  # 새로운 페이지 추가
     "PDF 챗봇": pdfchatbot,
-    "삼각형 만들기": triangle  # 새로운 페이지 추가
+    "삼각형 만들기": triangle,  # 새로운 페이지 추가
+    "지식쌤": jisikssam  # jisikssam 페이지 추가
 }
 
 st.sidebar.title("Navigation")
