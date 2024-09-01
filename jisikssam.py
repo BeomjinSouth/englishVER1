@@ -83,12 +83,12 @@ def app():
                         ],
                         stream=True,
                     )
-
                     for chunk in stream:
-                        content = chunk.choices[0].delta.get('content', '')
-                        response_content += content
-                        st.write(content)
-
+                        if 'content' in chunk.choices[0].delta:
+                            content = chunk.choices[0].delta['content']
+                            response_content += content
+                            st.write(content)
+           
                     st.session_state.design_messages.append({"role": "assistant", "content": response_content})
                 
                 except Exception as e:
