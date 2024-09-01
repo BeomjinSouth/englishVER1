@@ -5,7 +5,7 @@ import openai  # GPT API 사용
 import smtplib
 from email.mime.text import MIMEText
 
-# GPT API 키 설정
+# GPT API 키 설정 (secrets에서 가져오기)
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # 이메일 전송 함수 설정
@@ -122,7 +122,6 @@ def app():  # 이 함수가 app.py에서 호출됩니다.
             if email in accounts and accounts[email] == password:
                 st.session_state['logged_in'] = True
                 st.session_state['email'] = email
-                # 페이지 새로고침 없이 로그인 상태를 업데이트
             else:
                 st.error("이메일 또는 비밀번호가 일치하지 않습니다.")
 
