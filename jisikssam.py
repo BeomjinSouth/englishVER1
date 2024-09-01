@@ -131,7 +131,9 @@ def app():
 
                 # Streamlit의 최신 기능을 사용하여 스트리밍된 응답을 출력합니다.
                 response = st.write_stream(stream)
-                st.session_state.design_messages.append({"role": "assistant", "content": response})
+                # 중복 추가 방지
+                if not any(msg["content"] == response for msg in st.session_state.design_messages):
+                    st.session_state.design_messages.append({"role": "assistant", "content": response})
                 st.session_state["question_generated"] = True  # 문제 생성 상태 갱신
 
             except Exception as e:
