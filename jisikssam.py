@@ -118,10 +118,6 @@ def app():
             prompt = f"{main_category} - {sub_category}: '{topic}' 주제의 {num_questions}개의 문항을 생성해줘. 난이도는 {difficulty}이고, 문항 유형은 {question_type}이다."
             st.session_state.design_messages.append({"role": "user", "content": prompt})
 
-            # 사용자에게 입력한 프롬프트를 표시합니다.
-            with st.chat_message("user"):
-                st.markdown(prompt)
-
             # GPT 응답을 생성하여 출력합니다.
             try:
                 stream = client.chat.completions.create(
@@ -147,91 +143,21 @@ def app():
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
 
-            # 학생의 답변 또는 질문을 위한 텍스트 박스 표시
-            student_input = st.text_area('여기에 질문이나 답변을 입력하세요', key="student_input")
-            
-            # 버튼들을 사용하여 질문하기, 힌트 요청, 토의하기 기능 수행
-            if st.button('질문하기'):
-                st.session_state.design_messages.append({"role": "user", "content": student_input})
+            # 학생의 답변 또는 질문을 위한 텍스트 박스와 버튼 표시
+            col1, col2, col3 = st.columns([3, 1, 1])
 
-                # 사용자에게 입력한 질문을 표시합니다.
-                with st.chat_message("user"):
-                    st.markdown(student_input)
+            with col1:
+                student_input = st.text_area('여기에 질문이나 답변을 입력하세요', key="student_input")
 
-                # GPT와의 대화를 이어갑니다.
-                try:
-                    stream = client.chat.completions.create(
-                        model=st.session_state["openai_model"],
-                        messages=[
-                            {"role": m["role"], "content": m["content"]}
-                            for m in st.session_state.design_messages
-                        ],
-                        stream=True,
-                    )
+            with col2:
+                if st.button('질문하기'):
+                    st.session_state.design_messages.append({"role": "user", "content": student_input})
 
-                    response = st.write_stream(stream)
-                    st.session_state.design_messages.append({"role": "assistant", "content": response})
+                    # 사용자에게 입력한 질문을 표시합니다.
+                    with st.chat_message("user"):
+                        st.markdown(student_input)
 
-                except Exception as e:
-                    st.error(f"오류가 발생했습니다: {e}")
-
-            if st.button('힌트 요청'):
-                st.session_state.design_messages.append({"role": "user", "content": student_input})
-
-                # 사용자에게 입력한 요청을 표시합니다.
-                with st.chat_message("user"):
-                    st.markdown(student_input)
-
-                # GPT와의 대화를 이어갑니다.
-                try:
-                    stream = client.chat.completions.create(
-                        model=st.session_state["openai_model"],
-                        messages=[
-                            {"role": m["role"], "content": m["content"]}
-                            for m in st.session_state.design_messages
-                        ],
-                        stream=True,
-                    )
-
-                    response = st.write_stream(stream)
-                    st.session_state.design_messages.append({"role": "assistant", "content": response})
-
-                except Exception as e:
-                    st.error(f"오류가 발생했습니다: {e}")
-
-            if st.button('토의하기'):
-                st.session_state.design_messages.append({"role": "user", "content": student_input})
-
-                # 사용자에게 입력한 요청을 표시합니다.
-                with st.chat_message("user"):
-                    st.markdown(student_input)
-
-                # GPT와의 대화를 이어갑니다.
-                try:
-                    stream = client.chat.completions.create(
-                        model=st.session_state["openai_model"],
-                        messages=[
-                            {"role": m["role"], "content": m["content"]}
-                            for m in st.session_state.design_messages
-                        ],
-                        stream=True,
-                    )
-
-                    response = st.write_stream(stream)
-                    st.session_state.design_messages.append({"role": "assistant", "content": response})
-
-                except Exception as e:
-                    st.error(f"오류가 발생했습니다: {e}")
-
-            # '평가 요청' 버튼을 추가합니다.
-            if st.button('평가 요청'):
-                # GPT에게 학생의 답변을 평가하도록 요청합니다.
-                st.session_state.design_messages.append({"role": "user", "content": student_input})
-
-                with st.chat_message("assistant"):
-                    evaluation_prompt = f"학생의 답변을 평가해주세요: {student_input}"
-                    st.session_state.design_messages.append({"role": "user", "content": evaluation_prompt})
-
+                    # GPT와의 대화를 이어갑니다.
                     try:
                         stream = client.chat.completions.create(
                             model=st.session_state["openai_model"],
@@ -248,38 +174,87 @@ def app():
                     except Exception as e:
                         st.error(f"오류가 발생했습니다: {e}")
 
-                # 선생님에게 전체 대화 내역을 이메일로 전송
-                teacher_email = "teacher_email@gmail.com"  # 선생님의 이메일로 변경하세요.
-                all_messages = "\n\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.design_messages])
-                send_email(teacher_email, "학생과의 대화 내역", all_messages)
+            with col3:
+                if st.button('얘기하기'):
+                    st.session_state.design_messages.append({"role": "user", "content": student_input})
 
-                # 학생에게 평가 결과를 이메일로 전송
-                try:
-                    send_email(st.session_state['email'], "평가 결과", response)
-                    st.success("평가가 완료되었으며 학생의 이메일로 전송되었습니다.")
-                except smtplib.SMTPAuthenticationError:
-                    st.error("이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요.")
+                    # 사용자에게 입력한 요청을 표시합니다.
+                    with st.chat_message("user"):
+                        st.markdown(student_input)
 
-                # 학습 데이터를 저장
-                learning_data = load_learning_data()
-                email = st.session_state['email']
-                if email not in learning_data:
-                    learning_data[email] = []
+                    # GPT와의 대화를 이어갑니다.
+                    try:
+                        stream = client.chat.completions.create(
+                            model=st.session_state["openai_model"],
+                            messages=[
+                                {"role": m["role"], "content": m["content"]}
+                                for m in st.session_state.design_messages
+                            ],
+                            stream=True,
+                        )
 
-                learning_data[email].append({
-                    "timestamp": str(datetime.now()),
-                    "subject": main_category,
-                    "sub_topic": sub_category,
-                    "specific_topic": topic,
-                    "questions": response,
-                    "responses": student_input,
-                    "evaluation": response
-                })
-                save_learning_data(learning_data)
+                        response = st.write_stream(stream)
+                        st.session_state.design_messages.append({"role": "assistant", "content": response})
 
-                # 상태를 초기화하여 다음 입력을 받을 준비를 합니다.
-                st.session_state['response_complete'] = False
-                st.session_state["question_generated"] = False
+                    except Exception as e:
+                        st.error(f"오류가 발생했습니다: {e}")
+
+                if st.button('평가 요청'):
+                    # GPT에게 학생의 답변을 평가하도록 요청합니다.
+                    st.session_state.design_messages.append({"role": "user", "content": student_input})
+
+                    with st.chat_message("assistant"):
+                        evaluation_prompt = f"학생의 답변을 평가해주세요: {student_input}"
+                        st.session_state.design_messages.append({"role": "user", "content": evaluation_prompt})
+
+                        try:
+                            stream = client.chat.completions.create(
+                                model=st.session_state["openai_model"],
+                                messages=[
+                                    {"role": m["role"], "content": m["content"]}
+                                    for m in st.session_state.design_messages
+                                ],
+                                stream=True,
+                            )
+
+                            response = st.write_stream(stream)
+                            st.session_state.design_messages.append({"role": "assistant", "content": response})
+
+                        except Exception as e:
+                            st.error(f"오류가 발생했습니다: {e}")
+
+                    # 선생님에게 전체 대화 내역을 이메일로 전송
+                    teacher_email = "teacher_email@gmail.com"  # 선생님의 이메일로 변경하세요.
+                    all_messages = "\n\n".join([f"{m['role']}: {m['content']}"] for m in st.session_state.design_messages)
+                    send_email(teacher_email, "학생과의 대화 내역", all_messages)
+
+                    # 학생에게 평가 결과를 이메일로 전송
+                    try:
+                        send_email(st.session_state['email'], "평가 결과", response)
+                        st.success("평가가 완료되었으며 학생의 이메일로 전송되었습니다.")
+                    except smtplib.SMTPAuthenticationError:
+                        st.error("이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요.")
+
+                    # 학습 데이터를 저장
+                    learning_data = load_learning_data()
+                    email = st.session_state['email']
+                    if email not in learning_data:
+                        learning_data[email] = []
+
+                    learning_data[email].append({
+                        "timestamp": str(datetime.now()),
+                        "subject": main_category,
+                        "sub_topic": sub_category,
+                        "specific_topic": topic,
+                        "questions": response,
+                        "responses": student_input,
+                        "evaluation": response
+                    })
+                    save_learning_data(learning_data)
+
+                    # 상태를 초기화하여 다음 입력을 받을 준비를 합니다.
+                    st.session_state['response_complete'] = False
+                    st.session_state["question_generated"] = False
 
     else:
         # 로그인하지 않은 상태에서 로그인 및 계정 생성 화면을 표시합니다.
