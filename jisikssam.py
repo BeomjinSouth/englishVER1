@@ -64,16 +64,8 @@ def app():
     if 'logged_in' not in st.session_state:
         st.session_state['logged_in'] = False
 
-    # 쿼리 파라미터로 로그인 상태를 확인
-    query_params = st.experimental_get_query_params()
-    if 'logged_in' in query_params and query_params['logged_in'][0] == 'true':
-        st.session_state['logged_in'] = True
-
+    # 로그인 상태에 따라 다른 화면을 보여줍니다.
     if st.session_state['logged_in']:
-        if 'email' not in st.session_state:
-            st.error("이메일 정보가 없습니다. 다시 로그인해주세요.")
-            st.stop()  # 더 이상 진행하지 않도록 중지
-
         st.success(f"{st.session_state['email']}님, 환영합니다!")
 
         # 사용자 세션 상태 초기화
@@ -181,7 +173,9 @@ def app():
                 st.session_state['response_complete'] = False
 
     else:
-        # 이메일과 비밀번호 입력
+        # 로그인하지 않은 상태에서는 로그인 화면 표시
+        st.header("로그인 또는 계정 생성")
+
         email = st.text_input("이메일을 입력하세요")
         password = st.text_input("비밀번호를 입력하세요", type="password")
 
@@ -192,12 +186,12 @@ def app():
             if email in accounts and accounts[email] == password:
                 st.session_state['logged_in'] = True
                 st.session_state['email'] = email  # 세션 상태에 이메일 저장
-                # 로그인 성공 후 쿼리 파라미터 설정
                 st.experimental_set_query_params(logged_in="true")
+                st.experimental_rerun()  # 로그인 후 화면 갱신
             else:
                 st.error("이메일 또는 비밀번호가 일치하지 않습니다.")
 
-        # 계정 등록
+        # 계정 등록 처리
         if st.button("계정 등록"):
             if email in accounts:
                 st.error("이미 존재하는 이메일입니다.")
