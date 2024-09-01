@@ -70,6 +70,10 @@ def app():
         st.session_state['logged_in'] = True
 
     if st.session_state['logged_in']:
+        if 'email' not in st.session_state:
+            st.error("이메일 정보가 없습니다. 다시 로그인해주세요.")
+            st.stop()  # 더 이상 진행하지 않도록 중지
+
         st.success(f"{st.session_state['email']}님, 환영합니다!")
 
         # 사용자 세션 상태 초기화
@@ -187,7 +191,7 @@ def app():
         if st.button("로그인"):
             if email in accounts and accounts[email] == password:
                 st.session_state['logged_in'] = True
-                st.session_state['email'] = email
+                st.session_state['email'] = email  # 세션 상태에 이메일 저장
                 # 로그인 성공 후 쿼리 파라미터 설정
                 st.experimental_set_query_params(logged_in="true")
             else:
