@@ -40,7 +40,7 @@ def send_email(to_email, evaluation_content):
     # SMTP 서버 설정 (이 예제에서는 Gmail을 사용)
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
-    smtp_user = "pbj950418@gmail.com"  # 본인의 Gmail 주소로 변경
+    smtp_user = "your_email@gmail.com"  # 본인의 Gmail 주소로 변경
     smtp_password = st.secrets["EMAIL_PASSWORD"]  # 비밀번호는 secrets에서 불러옵니다.
 
     # 이메일 메시지 작성
@@ -75,6 +75,8 @@ def app():
             st.session_state["openai_model"] = "gpt-4o-mini"  # 사용할 OpenAI 모델 설정
         if "design_messages" not in st.session_state:
             st.session_state.design_messages = []  # 메시지 히스토리 초기화
+        if "question_generated" not in st.session_state:
+            st.session_state["question_generated"] = False  # 문제 생성 상태 초기화
 
         # 사용자 입력 받기 - 학습 과목, 주제, 문항 개수, 난이도, 문항 유형
         subject = st.selectbox('과목을 선택하세요', ['수학', '과학', '역사'])
@@ -107,15 +109,13 @@ def app():
                     # Streamlit의 최신 기능 사용
                     response = st.write_stream(stream)
                     st.session_state.design_messages.append({"role": "assistant", "content": response})
+                    st.session_state["question_generated"] = True  # 문제 생성 상태 갱신
 
                 except Exception as e:
                     st.error(f"오류가 발생했습니다: {e}")
 
         # 학생의 답변 제출 및 평가
-        if st.button('응답 완료'):
-            st.session_state['response_complete'] = True
-
-        if st.session_state.get('response_complete'):
+        if st.session_state.get("question_generated"):
             student_answer = st.text_area('여기에 답변을 입력하세요')
             if st.button('제출'):
                 # 학생의 답변을 세션 상태에 저장
@@ -142,8 +142,11 @@ def app():
                     st.session_state.design_messages.append({"role": "assistant", "content": response})
 
                 # 평가 결과를 이메일로 전송
-                send_email(st.session_state['email'], response)
-                st.success("평가가 완료되었으며 이메일로 전송되었습니다.")
+                try:
+                    send_email(st.session_state['email'], response)
+                    st.success("평가가 완료되었으며 이메일로 전송되었습니다.")
+                except smtplib.SMTPAuthenticationError:
+                    st.error("이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요.")
 
                 # 학습 데이터를 저장
                 learning_data = load_learning_data()
@@ -163,6 +166,7 @@ def app():
 
                 # 상태 리셋
                 st.session_state['response_complete'] = False
+                st.session_state["question_generated"] = False
 
     else:
         # 로그인하지 않은 상태에서 로그인 및 계정 생성 화면 표시
