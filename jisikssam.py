@@ -130,10 +130,12 @@ def app():
                 )
 
                 # Streamlit의 최신 기능을 사용하여 스트리밍된 응답을 출력합니다.
-                response = st.write_stream(stream)
+                response_content = "".join([chunk.choices[0].delta.get("content", "") for chunk in stream])
+                
                 # 중복 추가 방지
-                if not any(msg["content"] == response for msg in st.session_state.design_messages):
-                    st.session_state.design_messages.append({"role": "assistant", "content": response})
+                if not any(msg["content"] == response_content for msg in st.session_state.design_messages):
+                    st.session_state.design_messages.append({"role": "assistant", "content": response_content})
+
                 st.session_state["question_generated"] = True  # 문제 생성 상태 갱신
 
             except Exception as e:
@@ -146,19 +148,14 @@ def app():
                     st.markdown(message["content"])
 
             # 학생의 답변 또는 질문을 위한 텍스트 박스와 버튼 표시
-            col1, col2 = st.columns([3, 1])
-
-            with col1:
-                student_input = st.text_area('여기에 질문이나 답변을 입력하세요', key="student_input")
+            student_input = st.text_area('여기에 질문이나 답변을 입력하세요', key="student_input")
+            
+            col1, col2, col3 = st.columns([3, 1, 1])
 
             with col2:
                 if st.button('질문하기'):
                     st.session_state.design_messages.append({"role": "user", "content": student_input})
 
-                    # 사용자에게 입력한 질문을 표시합니다.
-                    with st.chat_message("user"):
-                        st.markdown(student_input)
-
                     # GPT와의 대화를 이어갑니다.
                     try:
                         stream = client.chat.completions.create(
@@ -170,18 +167,15 @@ def app():
                             stream=True,
                         )
 
-                        response = st.write_stream(stream)
-                        st.session_state.design_messages.append({"role": "assistant", "content": response})
+                        response_content = "".join([chunk.choices[0].delta.get("content", "") for chunk in stream])
+                        st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
                     except Exception as e:
                         st.error(f"오류가 발생했습니다: {e}")
 
+            with col3:
                 if st.button('얘기하기'):
                     st.session_state.design_messages.append({"role": "user", "content": student_input})
-
-                    # 사용자에게 입력한 요청을 표시합니다.
-                    with st.chat_message("user"):
-                        st.markdown(student_input)
 
                     # GPT와의 대화를 이어갑니다.
                     try:
@@ -194,8 +188,8 @@ def app():
                             stream=True,
                         )
 
-                        response = st.write_stream(stream)
-                        st.session_state.design_messages.append({"role": "assistant", "content": response})
+                        response_content = "".join([chunk.choices[0].delta.get("content", "") for chunk in stream])
+                        st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
                     except Exception as e:
                         st.error(f"오류가 발생했습니다: {e}")
@@ -204,25 +198,21 @@ def app():
                     # GPT에게 학생의 답변을 평가하도록 요청합니다.
                     st.session_state.design_messages.append({"role": "user", "content": student_input})
 
-                    with st.chat_message("assistant"):
-                        evaluation_prompt = f"학생의 답변을 평가해주세요: {student_input}"
-                        st.session_state.design_messages.append({"role": "user", "content": evaluation_prompt})
+                    try:
+                        stream = client.chat.completions.create(
+                            model=st.session_state["openai_model"],
+                            messages=[
+                                {"role": m["role"], "content": m["content"]}
+                                for m in st.session_state.design_messages
+                            ],
+                            stream=True,
+                        )
 
-                        try:
-                            stream = client.chat.completions.create(
-                                model=st.session_state["openai_model"],
-                                messages=[
-                                    {"role": m["role"], "content": m["content"]}
-                                    for m in st.session_state.design_messages
-                                ],
-                                stream=True,
-                            )
+                        response_content = "".join([chunk.choices[0].delta.get("content", "") for chunk in stream])
+                        st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
-                            response = st.write_stream(stream)
-                            st.session_state.design_messages.append({"role": "assistant", "content": response})
-
-                        except Exception as e:
-                            st.error(f"오류가 발생했습니다: {e}")
+                    except Exception as e:
+                        st.error(f"오류가 발생했습니다: {e}")
 
                     # 선생님에게 전체 대화 내역을 이메일로 전송
                     teacher_email = "teacher_email@gmail.com"  # 선생님의 이메일로 변경하세요.
@@ -231,7 +221,7 @@ def app():
 
                     # 학생에게 평가 결과를 이메일로 전송
                     try:
-                        send_email(st.session_state['email'], "평가 결과", response)
+                        send_email(st.session_state['email'], "평가 결과", response_content)
                         st.success("평가가 완료되었으며 학생의 이메일로 전송되었습니다.")
                     except smtplib.SMTPAuthenticationError:
                         st.error("이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요.")
@@ -247,9 +237,9 @@ def app():
                         "subject": main_category,
                         "sub_topic": sub_category,
                         "specific_topic": topic,
-                        "questions": response,
+                        "questions": response_content,
                         "responses": student_input,
-                        "evaluation": response
+                        "evaluation": response_content
                     })
                     save_learning_data(learning_data)
 
