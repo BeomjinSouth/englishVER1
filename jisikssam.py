@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # OpenAI API 키 설정
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # 계정 데이터 로드
 def load_accounts():
@@ -47,7 +47,7 @@ def app():
 
         # 사용자 세션 상태 초기화
         if "openai_model" not in st.session_state:
-            st.session_state["openai_model"] = "gpt-4o"
+            st.session_state["openai_model"] = "gpt-4o-mini"
         if "design_messages" not in st.session_state:
             st.session_state.design_messages = []
 
@@ -69,7 +69,8 @@ def app():
             # GPT 응답 생성 및 출력
             with st.chat_message("assistant"):
                 try:
-                    stream = client.chat.completions.create(
+                    response_content = ""
+                    stream = openai.ChatCompletion.create(
                         model=st.session_state["openai_model"],
                         messages=[
                             {"role": m["role"], "content": m["content"]}
@@ -78,15 +79,10 @@ def app():
                         stream=True,
                     )
 
-                    response_content = ""
                     for chunk in stream:
-                        if hasattr(chunk.choices[0], 'delta'):
-                            content = chunk.choices[0].delta.get('content', '')
-                            response_content += content
-                            st.write(content)
-                        else:
-                            st.error("응답 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
-                            break
+                        content = chunk.choices[0].delta.get('content', '')
+                        response_content += content
+                        st.write(content)
 
                     st.session_state.design_messages.append({"role": "assistant", "content": response_content})
                 
@@ -111,7 +107,8 @@ def app():
                     evaluation_prompt = f"학생의 답변을 평가해주세요: {student_answer}"
                     st.session_state.design_messages.append({"role": "user", "content": evaluation_prompt})
 
-                    stream = client.chat.completions.create(
+                    response_content = ""
+                    stream = openai.ChatCompletion.create(
                         model=st.session_state["openai_model"],
                         messages=[
                             {"role": m["role"], "content": m["content"]}
@@ -120,16 +117,15 @@ def app():
                         stream=True,
                     )
 
-                    evaluation_content = ""
                     for chunk in stream:
                         content = chunk.choices[0].delta.get('content', '')
-                        evaluation_content += content
+                        response_content += content
                         st.write(content)
 
-                    st.session_state.design_messages.append({"role": "assistant", "content": evaluation_content})
+                    st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
                 # 이메일 발송 (학생의 학습 결과 평가)
-                send_email(st.session_state['email'], evaluation_content)
+                send_email(st.session_state['email'], response_content)
                 st.success("평가가 완료되었으며 이메일로 전송되었습니다.")
 
                 # 학습 데이터 저장
@@ -144,7 +140,7 @@ def app():
                     "topic": topic,
                     "questions": response_content,
                     "responses": student_answer,
-                    "evaluation": evaluation_content
+                    "evaluation": response_content
                 })
                 save_learning_data(learning_data)
 
