@@ -1,12 +1,12 @@
 import streamlit as st
+from openai import OpenAI
 import json
 from datetime import datetime
-import openai  # GPT API 사용
 import smtplib
 from email.mime.text import MIMEText
 
-# GPT API 키 설정 (secrets에서 가져오기)
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# OpenAI API 키 설정 (secrets에서 가져오기)
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # 이메일 전송 함수 설정
 def send_email(to_email, subject, body):
@@ -64,13 +64,18 @@ def app():  # 이 함수가 app.py에서 호출됩니다.
 
         if st.button("생성하기"):
             # GPT API를 통해 문제 생성
-            prompt = f"Create {num_questions} {difficulty} level {question_type} questions on the topic of {topic} for {subject}."
-            response = openai.Completion.create(
-                engine="text-davinci-003",
-                prompt=prompt,
-                max_tokens=500
+            messages = [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": f"Create {num_questions} {difficulty} level {question_type} questions on the topic of {topic} for {subject}."}
+            ]
+
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                stream=False,
             )
-            questions = response.choices[0].text.strip()
+            
+            questions = response['choices'][0]['message']['content'].strip()
             st.write("생성된 문항:")
             st.write(questions)
 
@@ -82,13 +87,18 @@ def app():  # 이 함수가 app.py에서 호출됩니다.
 
             if st.button("응답 완료"):
                 # 응답 평가
-                evaluation_prompt = f"Evaluate these responses: {user_responses} based on the questions {questions}."
-                evaluation_response = openai.Completion.create(
-                    engine="text-davinci-003",
-                    prompt=evaluation_prompt,
-                    max_tokens=500
+                evaluation_prompt = [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": f"Evaluate these responses: {user_responses} based on the questions {questions}."}
+                ]
+
+                evaluation_response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=evaluation_prompt,
+                    stream=False,
                 )
-                evaluation = evaluation_response.choices[0].text.strip()
+                
+                evaluation = evaluation_response['choices'][0]['message']['content'].strip()
 
                 # 학습 데이터 저장
                 learning_data = load_learning_data()
