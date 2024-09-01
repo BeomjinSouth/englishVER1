@@ -1,149 +1,129 @@
 import streamlit as st
 from openai import OpenAI
-import json
-from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-# OpenAI API 키 설정 (secrets에서 가져오기)
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# OpenAI API 키 설정
+client = OpenAI(api_key=st.secrets["OPENAI"]["OPENAI_API_KEY"])
 
-# 이메일 전송 함수 설정
-def send_email(to_email, subject, body):
-    msg = MIMEText(body)
-    msg['Subject'] = subject
-    msg['From'] = 'your_email@example.com'
-    msg['To'] = to_email
+def app():
+    st.title("설계안 도우미 챗봇 - 성호중 박범진")
 
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-        server.login('your_email@example.com', 'your_email_password')
-        server.send_message(msg)
+    # 사용자 세션 상태 초기화
+    if "openai_model" not in st.session_state:
+        st.session_state["openai_model"] = "gpt-4o"
+    if "design_messages" not in st.session_state:
+        st.session_state.design_messages = []
 
-# 계정 데이터 로드
-def load_accounts():
-    try:
-        with open("accounts.json", "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {}
+    # 사용자 입력받기
+    subject = st.selectbox('과목을 선택하세요', ['수학', '과학', '역사'])
+    topic = st.text_input('원하는 주제를 입력하세요')
+    num_questions = st.number_input('문항 개수를 선택하세요', min_value=1, max_value=10, value=3)
+    difficulty = st.selectbox('난이도를 선택하세요', ['쉬움', '보통', '어려움'])
+    question_type = st.selectbox('문항 유형을 선택하세요', ['논술형', '객관식'])
 
-# 계정 데이터 저장
-def save_accounts(accounts):
-    with open("accounts.json", "w") as file:
-        json.dump(accounts, file)
+    # 문항 생성 요청
+    if st.button('생성하기'):
+        prompt = f"{subject} 과목에서 '{topic}' 주제의 {num_questions}개의 문항을 생성해줘. 난이도는 {difficulty}이고, 문항 유형은 {question_type}이다."
+        st.session_state.design_messages.append({"role": "user", "content": prompt})
+        
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-# 학습 데이터 로드
-def load_learning_data():
-    try:
-        with open("learning_data.json", "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {}
-
-# 학습 데이터 저장
-def save_learning_data(learning_data):
-    with open("learning_data.json", "w") as file:
-        json.dump(learning_data, file)
-
-def app():  # 이 함수가 app.py에서 호출됩니다.
-    st.title("지식쌤")
-
-    # 로그인 상태를 체크하기 위한 세션 상태 변수
-    if 'logged_in' not in st.session_state:
-        st.session_state['logged_in'] = False
-
-    if st.session_state['logged_in']:
-        st.success(f"{st.session_state['email']}님, 환영합니다!")
-
-        # 과목 선택, 주제 입력, 문항 개수, 난이도, 문항 유형 설정
-        subject = st.selectbox("과목을 선택하세요", ["수학", "과학", "영어", "역사"])
-        topic = st.text_input("주제를 입력하세요")
-        num_questions = st.number_input("문항 개수를 입력하세요", min_value=1, max_value=10)
-        difficulty = st.selectbox("난이도를 선택하세요", ["쉬움", "중간", "어려움"])
-        question_type = st.selectbox("문항 유형을 선택하세요", ["논술형", "객관식"])
-
-        if st.button("생성하기"):
-            # GPT API를 통해 문제 생성
-            messages = [
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Create {num_questions} {difficulty} level {question_type} questions on the topic of {topic} for {subject}."}
-            ]
-
-            response = client.chat_completions.create(
-                model="gpt-4o-mini",
-                messages=messages,
-                stream=False,
+        # GPT 응답 생성 및 출력
+        with st.chat_message("assistant"):
+            stream = client.chat.completions.create(
+                model=st.session_state["openai_model"],
+                messages=[
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.design_messages
+                ],
+                stream=True,
             )
 
-            # 응답 객체를 출력하여 확인
-            st.write(response)
+            response_content = ""
+            for chunk in stream:
+                content = chunk.choices[0].delta.get('content', '')
+                response_content += content
+                st.write(content)
 
-            # 올바른 필드에서 문항 가져오기
-            questions = response['choices'][0]['message']['content'].strip() if 'message' in response['choices'][0] else response['choices'][0]['content'].strip()
-            st.write("생성된 문항:")
-            st.write(questions)
+            st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
-            # 사용자가 문항에 응답을 입력할 수 있는 텍스트 필드
-            user_responses = []
-            for i, question in enumerate(questions.split('\n'), start=1):
-                response = st.text_area(f"Q{i}: {question}", "")
-                user_responses.append(response)
+    # 학생의 답변과 평가 주고받기
+    if '응답 완료' in st.session_state:
+        student_answer = st.text_area('여기에 답변을 입력하세요')
+        if st.button('제출'):
+            st.session_state.design_messages.append({"role": "user", "content": student_answer})
+            
+            with st.chat_message("user"):
+                st.markdown(student_answer)
+            
+            # 평가 요청 및 처리
+            with st.chat_message("assistant"):
+                evaluation_prompt = f"학생의 답변을 평가해주세요: {student_answer}"
+                st.session_state.design_messages.append({"role": "user", "content": evaluation_prompt})
 
-            if st.button("응답 완료"):
-                # 응답 평가
-                evaluation_prompt = [
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": f"Evaluate these responses: {user_responses} based on the questions {questions}."}
-                ]
-
-                evaluation_response = client.chat_completions.create(
-                    model="gpt-4o-mini",
-                    messages=evaluation_prompt,
-                    stream=False,
+                stream = client.chat.completions.create(
+                    model=st.session_state["openai_model"],
+                    messages=[
+                        {"role": m["role"], "content": m["content"]}
+                        for m in st.session_state.design_messages
+                    ],
+                    stream=True,
                 )
-                
-                evaluation = evaluation_response['choices'][0]['message']['content'].strip()
 
-                # 학습 데이터 저장
-                learning_data = load_learning_data()
-                email = st.session_state['email']
-                if email not in learning_data:
-                    learning_data[email] = []
+                evaluation_content = ""
+                for chunk in stream:
+                    content = chunk.choices[0].delta.get('content', '')
+                    evaluation_content += content
+                    st.write(content)
 
-                learning_data[email].append({
-                    "timestamp": str(datetime.now()),
-                    "subject": subject,
-                    "topic": topic,
-                    "questions": questions,
-                    "responses": user_responses,
-                    "evaluation": evaluation
-                })
-                save_learning_data(learning_data)
+                st.session_state.design_messages.append({"role": "assistant", "content": evaluation_content})
 
-                # 평가 결과 이메일로 전송
-                send_email(email, f"{subject} 주제 {topic}에 대한 학습 평가", evaluation)
-                st.success("평가가 완료되었으며, 이메일로 전송되었습니다.")
+            # 이메일 발송 (학생의 학습 결과 평가)
+            send_email("student_email@example.com", evaluation_content)
+            st.success("평가가 완료되었으며 이메일로 전송되었습니다.")
 
+def send_email(to_email, evaluation_content):
+    # SMTP 서버 설정 (이 예제에서는 Gmail을 사용)
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    smtp_user = "your_email@example.com"
+    smtp_password = st.secrets["EMAIL_PASSWORD"]
+
+    # 이메일 메시지 작성
+    msg = MIMEMultipart()
+    msg['From'] = smtp_user
+    msg['To'] = to_email
+    msg['Subject'] = "GPT 학습 평가 결과"
+
+    body = MIMEText(evaluation_content, 'plain')
+    msg.attach(body)
+
+    # 이메일 전송
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, to_email, msg.as_string())
+
+def update_learning_record(user_email, new_evaluation):
+    # 기존 학습 기록 가져오기 (이 예제에서는 간단하게 세션 상태에 저장)
+    if "learning_records" not in st.session_state:
+        st.session_state["learning_records"] = {}
+
+    if user_email not in st.session_state["learning_records"]:
+        st.session_state["learning_records"][user_email] = []
+
+    # 새 평가 기록 추가
+    st.session_state["learning_records"][user_email].append(new_evaluation)
+
+    # 간단한 예시: 과거의 평가와 비교하여 개선되었는지 분석
+    past_records = st.session_state["learning_records"][user_email]
+    if len(past_records) > 1:
+        if past_records[-1] > past_records[-2]:
+            st.write("이전보다 더 좋아졌습니다.")
+        else:
+            st.write("이전과 비슷하거나 조금 나빠졌습니다. 이런 부분에 대해 보완이 필요합니다.")
     else:
-        # 이메일과 비밀번호 입력
-        email = st.text_input("이메일을 입력하세요")
-        password = st.text_input("비밀번호를 입력하세요", type="password")
-
-        accounts = load_accounts()
-
-        # 로그인 처리
-        if st.button("로그인"):
-            if email in accounts and accounts[email] == password:
-                st.session_state['logged_in'] = True
-                st.session_state['email'] = email
-            else:
-                st.error("이메일 또는 비밀번호가 일치하지 않습니다.")
-
-        # 계정 등록
-        if st.button("계정 등록"):
-            if email in accounts:
-                st.error("이미 존재하는 이메일입니다.")
-            else:
-                accounts[email] = password
-                save_accounts(accounts)
-                st.success("계정이 성공적으로 등록되었습니다.")
+        st.write("첫 평가입니다. 계속 학습하여 개선해 나가세요.")
