@@ -110,13 +110,17 @@ def app():
                         if 'content' in chunk.choices[0].delta:
                             content = chunk.choices[0].delta['content']
                             response_content += content
-                            st.write(content)
+                            st.write(content)  # GPT가 생성한 내용을 출력합니다.
 
                     # 응답 메시지를 세션 상태에 저장
                     st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
                 except Exception as e:
                     st.error(f"오류가 발생했습니다: {e}")
+
+            # GPT가 생성한 문제를 화면에 표시
+            st.markdown("### 생성된 문제:")
+            st.markdown(response_content)  # 생성된 문제를 화면에 표시합니다.
 
         # 학생의 답변 제출 및 평가
         if st.button('응답 완료'):
