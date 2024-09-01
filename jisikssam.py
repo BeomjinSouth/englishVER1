@@ -69,13 +69,17 @@ def app():  # 이 함수가 app.py에서 호출됩니다.
                 {"role": "user", "content": f"Create {num_questions} {difficulty} level {question_type} questions on the topic of {topic} for {subject}."}
             ]
 
-            response = client.chat.completions.create(
-                model="gpt-4o",
+            response = client.chat_completions.create(
+                model="gpt-4o-mini",
                 messages=messages,
                 stream=False,
             )
-            
-            questions = response['choices'][0]['message']['content'].strip()
+
+            # 응답 객체를 출력하여 확인
+            st.write(response)
+
+            # 올바른 필드에서 문항 가져오기
+            questions = response['choices'][0]['message']['content'].strip() if 'message' in response['choices'][0] else response['choices'][0]['content'].strip()
             st.write("생성된 문항:")
             st.write(questions)
 
@@ -92,8 +96,8 @@ def app():  # 이 함수가 app.py에서 호출됩니다.
                     {"role": "user", "content": f"Evaluate these responses: {user_responses} based on the questions {questions}."}
                 ]
 
-                evaluation_response = client.chat.completions.create(
-                    model="gpt-4o",
+                evaluation_response = client.chat_completions.create(
+                    model="gpt-4o-mini",
                     messages=evaluation_prompt,
                     stream=False,
                 )
