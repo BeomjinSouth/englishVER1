@@ -95,7 +95,6 @@ def app():
             # GPT 응답을 생성하여 출력
             with st.chat_message("assistant"):
                 try:
-                    response_content = ""
                     stream = client.chat.completions.create(
                         model=st.session_state["openai_model"],
                         messages=[
@@ -105,22 +104,12 @@ def app():
                         stream=True,
                     )
 
-                    # 스트리밍으로 응답을 받아 화면에 출력
-                    for chunk in stream:
-                        if 'content' in chunk.choices[0].delta:
-                            content = chunk.choices[0].delta['content']
-                            response_content += content
-                            st.write(content)  # GPT가 생성한 내용을 출력합니다.
-
-                    # 응답 메시지를 세션 상태에 저장
-                    st.session_state.design_messages.append({"role": "assistant", "content": response_content})
+                    # Streamlit의 최신 기능 사용
+                    response = st.write_stream(stream)
+                    st.session_state.design_messages.append({"role": "assistant", "content": response})
 
                 except Exception as e:
                     st.error(f"오류가 발생했습니다: {e}")
-
-            # GPT가 생성한 문제를 화면에 표시
-            st.markdown("### 생성된 문제:")
-            st.markdown(response_content)  # 생성된 문제를 화면에 표시합니다.
 
         # 학생의 답변 제출 및 평가
         if st.button('응답 완료'):
@@ -140,7 +129,6 @@ def app():
                     evaluation_prompt = f"학생의 답변을 평가해주세요: {student_answer}"
                     st.session_state.design_messages.append({"role": "user", "content": evaluation_prompt})
 
-                    response_content = ""
                     stream = client.chat.completions.create(
                         model=st.session_state["openai_model"],
                         messages=[
@@ -150,16 +138,11 @@ def app():
                         stream=True,
                     )
 
-                    for chunk in stream:
-                        if 'content' in chunk.choices[0].delta:
-                            content = chunk.choices[0].delta['content']
-                            response_content += content
-                            st.write(content)
-
-                    st.session_state.design_messages.append({"role": "assistant", "content": response_content})
+                    response = st.write_stream(stream)
+                    st.session_state.design_messages.append({"role": "assistant", "content": response})
 
                 # 평가 결과를 이메일로 전송
-                send_email(st.session_state['email'], response_content)
+                send_email(st.session_state['email'], response)
                 st.success("평가가 완료되었으며 이메일로 전송되었습니다.")
 
                 # 학습 데이터를 저장
@@ -172,9 +155,9 @@ def app():
                     "timestamp": str(datetime.now()),
                     "subject": subject,
                     "topic": topic,
-                    "questions": response_content,
+                    "questions": response,
                     "responses": student_answer,
-                    "evaluation": response_content
+                    "evaluation": response
                 })
                 save_learning_data(learning_data)
 
@@ -196,7 +179,6 @@ def app():
                 st.session_state['logged_in'] = True
                 st.session_state['email'] = email  # 세션 상태에 이메일 저장
                 st.experimental_set_query_params(logged_in="true")
-                # 로그인 후 화면을 갱신하기 위해 st.experimental_set_query_params()를 사용하여 쿼리 파라미터를 설정합니다.
             else:
                 st.error("이메일 또는 비밀번호가 일치하지 않습니다.")
 
