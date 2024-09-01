@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # OpenAI API 키 설정
-client = OpenAI(api_key=st.secrets["OPENAI"]["OPENAI_API_KEY"])
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def app():
     import streamlit as st
