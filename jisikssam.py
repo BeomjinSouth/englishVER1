@@ -144,7 +144,7 @@ def app():
                     st.markdown(message["content"])
 
             # 학생의 답변 또는 질문을 위한 텍스트 박스와 버튼 표시
-            col1, col2, col3 = st.columns([3, 1, 1])
+            col1, col2 = st.columns([3, 1])
 
             with col1:
                 student_input = st.text_area('여기에 질문이나 답변을 입력하세요', key="student_input")
@@ -174,7 +174,6 @@ def app():
                     except Exception as e:
                         st.error(f"오류가 발생했습니다: {e}")
 
-            with col3:
                 if st.button('얘기하기'):
                     st.session_state.design_messages.append({"role": "user", "content": student_input})
 
