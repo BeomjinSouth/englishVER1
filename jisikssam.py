@@ -6,7 +6,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 # GPT API 키 설정
-openai.api_key = 'YOUR_OPENAI_API_KEY'
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # 이메일 전송 함수 설정
 def send_email(to_email, subject, body):
