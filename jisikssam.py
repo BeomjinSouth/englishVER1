@@ -196,7 +196,7 @@ def app():
                 st.session_state['logged_in'] = True
                 st.session_state['email'] = email  # 세션 상태에 이메일 저장
                 st.experimental_set_query_params(logged_in="true")
-                st.experimental_rerun()  # 로그인 후 화면 갱신
+                # 로그인 후 화면을 갱신하기 위해 st.experimental_set_query_params()를 사용하여 쿼리 파라미터를 설정합니다.
             else:
                 st.error("이메일 또는 비밀번호가 일치하지 않습니다.")
 
