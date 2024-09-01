@@ -33,27 +33,39 @@ def app():
 
         # GPT 응답 생성 및 출력
         with st.chat_message("assistant"):
-            stream = client.chat.completions.create(
-                model=st.session_state["openai_model"],
-                messages=[
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.design_messages
-                ],
-                stream=True,
-            )
+            try:
+                stream = client.chat.completions.create(
+                    model=st.session_state["openai_model"],
+                    messages=[
+                        {"role": m["role"], "content": m["content"]}
+                        for m in st.session_state.design_messages
+                    ],
+                    stream=True,
+                )
 
-            response_content = ""
-            for chunk in stream:
-                content = chunk.choices[0].delta.get('content', '')
-                response_content += content
-                st.write(content)
+                response_content = ""
+                for chunk in stream:
+                    if hasattr(chunk.choices[0], 'delta'):
+                        content = chunk.choices[0].delta.get('content', '')
+                        response_content += content
+                        st.write(content)
+                    else:
+                        st.error("응답 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
+                        break
 
-            st.session_state.design_messages.append({"role": "assistant", "content": response_content})
+                st.session_state.design_messages.append({"role": "assistant", "content": response_content})
+            
+            except Exception as e:
+                st.error(f"오류가 발생했습니다: {e}")
 
     # 학생의 답변과 평가 주고받기
-    if '응답 완료' in st.session_state:
+    if st.button('응답 완료'):
+        st.session_state['response_complete'] = True
+
+    if st.session_state.get('response_complete'):
         student_answer = st.text_area('여기에 답변을 입력하세요')
         if st.button('제출'):
+            # 학생의 답변을 세션에 저장
             st.session_state.design_messages.append({"role": "user", "content": student_answer})
             
             with st.chat_message("user"):
@@ -84,6 +96,9 @@ def app():
             # 이메일 발송 (학생의 학습 결과 평가)
             send_email("student_email@example.com", evaluation_content)
             st.success("평가가 완료되었으며 이메일로 전송되었습니다.")
+            
+            # 상태 리셋
+            st.session_state['response_complete'] = False
 
 def send_email(to_email, evaluation_content):
     # SMTP 서버 설정 (이 예제에서는 Gmail을 사용)
@@ -127,3 +142,6 @@ def update_learning_record(user_email, new_evaluation):
             st.write("이전과 비슷하거나 조금 나빠졌습니다. 이런 부분에 대해 보완이 필요합니다.")
     else:
         st.write("첫 평가입니다. 계속 학습하여 개선해 나가세요.")
+
+if __name__ == "__main__":
+    app()
