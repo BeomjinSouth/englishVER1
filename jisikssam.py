@@ -120,18 +120,16 @@ def app():
 
             # GPT 응답을 생성하여 출력합니다.
             try:
-                stream = client.chat.completions.create(
+                response = client.chat.completions.create(
                     model=st.session_state["openai_model"],
                     messages=[
                         {"role": m["role"], "content": m["content"]}
                         for m in st.session_state.design_messages
-                    ],
-                    stream=True,
+                    ]
                 )
 
-                # Streamlit의 최신 기능을 사용하여 스트리밍된 응답을 출력합니다.
-                response_content = "".join([chunk.choices[0].delta.get("content", "") for chunk in stream])
-                
+                response_content = response.choices[0].message["content"]
+
                 # 중복 추가 방지
                 if not any(msg["content"] == response_content for msg in st.session_state.design_messages):
                     st.session_state.design_messages.append({"role": "assistant", "content": response_content})
@@ -158,16 +156,15 @@ def app():
 
                     # GPT와의 대화를 이어갑니다.
                     try:
-                        stream = client.chat.completions.create(
+                        response = client.chat.completions.create(
                             model=st.session_state["openai_model"],
                             messages=[
                                 {"role": m["role"], "content": m["content"]}
                                 for m in st.session_state.design_messages
-                            ],
-                            stream=True,
+                            ]
                         )
 
-                        response_content = "".join([chunk.choices[0].delta.get("content", "") for chunk in stream])
+                        response_content = response.choices[0].message["content"]
                         st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
                     except Exception as e:
@@ -179,16 +176,15 @@ def app():
 
                     # GPT와의 대화를 이어갑니다.
                     try:
-                        stream = client.chat.completions.create(
+                        response = client.chat.completions.create(
                             model=st.session_state["openai_model"],
                             messages=[
                                 {"role": m["role"], "content": m["content"]}
                                 for m in st.session_state.design_messages
-                            ],
-                            stream=True,
+                            ]
                         )
 
-                        response_content = "".join([chunk.choices[0].delta.get("content", "") for chunk in stream])
+                        response_content = response.choices[0].message["content"]
                         st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
                     except Exception as e:
@@ -199,16 +195,15 @@ def app():
                     st.session_state.design_messages.append({"role": "user", "content": student_input})
 
                     try:
-                        stream = client.chat.completions.create(
+                        response = client.chat.completions.create(
                             model=st.session_state["openai_model"],
                             messages=[
                                 {"role": m["role"], "content": m["content"]}
                                 for m in st.session_state.design_messages
-                            ],
-                            stream=True,
+                            ]
                         )
 
-                        response_content = "".join([chunk.choices[0].delta.get("content", "") for chunk in stream])
+                        response_content = response.choices[0].message["content"]
                         st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
                     except Exception as e:
