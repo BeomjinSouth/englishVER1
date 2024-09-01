@@ -53,6 +53,8 @@ def app():  # 이 함수가 app.py에서 호출됩니다.
         st.session_state['logged_in'] = False
 
     if st.session_state['logged_in']:
+        st.success(f"{st.session_state['email']}님, 환영합니다!")
+
         # 과목 선택, 주제 입력, 문항 개수, 난이도, 문항 유형 설정
         subject = st.selectbox("과목을 선택하세요", ["수학", "과학", "영어", "역사"])
         topic = st.text_input("주제를 입력하세요")
@@ -120,7 +122,7 @@ def app():  # 이 함수가 app.py에서 호출됩니다.
             if email in accounts and accounts[email] == password:
                 st.session_state['logged_in'] = True
                 st.session_state['email'] = email
-                st.success(f"{email}님, 환영합니다!")
+                st.experimental_rerun()  # 로그인 후 화면 새로고침
             else:
                 st.error("이메일 또는 비밀번호가 일치하지 않습니다.")
 
