@@ -142,12 +142,11 @@ def app():
                 except Exception as e:
                     st.error(f"오류가 발생했습니다: {e}")
 
-        # 기존 대화 내역 표시
+        # 학생의 질문과 GPT의 응답을 입력칸 위에 표시
         if st.session_state.get("question_generated"):
             for message in st.session_state.design_messages:
-                if message["role"] != "user":
-                    with st.chat_message(message["role"]):
-                        st.markdown(message["content"])
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
 
             # 학생의 답변 또는 질문을 위한 텍스트 박스 표시
             student_input = st.text_area('여기에 질문이나 답변을 입력하세요')
