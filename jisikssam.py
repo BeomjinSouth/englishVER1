@@ -63,11 +63,15 @@ def stream_gpt_response(prompt):
         stream=True
     )
 
-    # stream 응답 처리
+    full_response = ""
     for chunk in response:
         if "choices" in chunk:
             if chunk["choices"][0].get("delta", {}).get("content"):
-                yield chunk["choices"][0]["delta"]["content"]
+                content = chunk["choices"][0]["delta"]["content"]
+                full_response += content
+                yield content
+
+    st.session_state["last_gpt_response"] = full_response
 
 # 메인 애플리케이션 함수
 def app():
@@ -101,17 +105,22 @@ def app():
 
             # GPT의 응답을 스트리밍으로 출력
             with st.spinner("문항 생성 중..."):
+                st.session_state["last_gpt_response"] = ""
                 for word in stream_gpt_response(prompt):
                     st.write_stream(word)
+
+            # 마지막 GPT 응답을 화면에 표시
+            st.session_state.design_messages.append({"role": "assistant", "content": st.session_state["last_gpt_response"]})
 
         if st.session_state.get("question_generated"):
             for message in st.session_state.design_messages:
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
 
-            student_input = st.text_area('여기에 질문이나 답변을 입력하세요', key="student_input")
-            
+            # 입력칸과 버튼을 나란히 배치
             col1, col2 = st.columns([3, 1])
+            with col1:
+                student_input = st.text_area('여기에 질문이나 답변을 입력하세요', key="student_input")
 
             with col2:
                 if st.button('질문하기'):
@@ -153,8 +162,11 @@ def handle_button_click(button_type, student_input):
     prompt = f"{button_type}로 입력된 내용에 대해 답변해줘: {student_input}"
     
     with st.spinner(f"{button_type}에 대한 응답 생성 중..."):
+        st.session_state["last_gpt_response"] = ""
         for word in stream_gpt_response(prompt):
             st.write_stream(word)
     
+    st.session_state.design_messages.append({"role": "assistant", "content": st.session_state["last_gpt_response"]})
+
 if __name__ == "__main__":
     app()
