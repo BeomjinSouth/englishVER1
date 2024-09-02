@@ -26,15 +26,7 @@ def stream_gpt_response(prompt):
         stream=True
     )
 
-    full_response = ""
-    for chunk in response:
-        if "choices" in chunk:
-            if chunk["choices"][0].get("delta", {}).get("content"):
-                content = chunk["choices"][0]["delta"]["content"]
-                full_response += content
-                yield content  # 각 단어 또는 데이터 청크를 스트리밍으로 보냅니다.
-
-    st.session_state["last_gpt_response"] = full_response
+    return response  # 스트리밍 객체를 그대로 반환
 
 def handle_button_click(button_type, student_input):
     st.session_state.design_messages.append({"role": "user", "content": f"{button_type}: {student_input}"})
@@ -42,10 +34,13 @@ def handle_button_click(button_type, student_input):
     prompt = f"{button_type}로 입력된 내용에 대해 답변해줘: {student_input}"
     
     with st.spinner(f"{button_type}에 대한 응답 생성 중..."):
-        st.session_state["last_gpt_response"] = ""
-        st.write_stream(stream_gpt_response(prompt))  # 스트리밍 데이터를 실시간으로 화면에 출력합니다.
-
-    st.session_state.design_messages.append({"role": "assistant", "content": st.session_state["last_gpt_response"]})
+        try:
+            # 스트리밍 객체를 가져와서 st.write_stream을 통해 출력
+            stream = stream_gpt_response(prompt)
+            response = st.write_stream(stream)  # 여기서 GPT의 응답이 실시간으로 출력됩니다.
+            st.session_state.design_messages.append({"role": "assistant", "content": response})
+        except Exception as e:
+            st.error(f"오류 발생: {e}")
 
 # 메인 애플리케이션 함수
 def app():
@@ -79,16 +74,17 @@ def app():
 
             # GPT의 응답을 스트리밍으로 출력
             with st.spinner("문항 생성 중..."):
-                st.session_state["last_gpt_response"] = ""
-                st.write_stream(stream_gpt_response(prompt))  # 스트리밍된 데이터를 실시간으로 출력합니다.
-
-            # 마지막 GPT 응답을 화면에 표시
-            st.session_state.design_messages.append({"role": "assistant", "content": st.session_state["last_gpt_response"]})
+                try:
+                    stream = stream_gpt_response(prompt)
+                    response = st.write_stream(stream)  # 스트리밍된 데이터를 실시간으로 출력
+                    st.session_state.design_messages.append({"role": "assistant", "content": response})
+                except Exception as e:
+                    st.error(f"오류 발생: {e}")
 
         if st.session_state.get("question_generated"):
             for message in st.session_state.design_messages:
                 with st.chat_message(message["role"]):
-                    st.write_stream([message["content"]])
+                    st.write(message["content"])
 
             # 입력칸과 버튼을 나란히 배치
             col1, col2 = st.columns([3, 1])
