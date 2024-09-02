@@ -1,7 +1,6 @@
 import streamlit as st
-import json
-from datetime import datetime
 from openai import OpenAI
+import json
 
 # OpenAI API 키 설정
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -19,19 +18,6 @@ def save_accounts(accounts):
     with open("accounts.json", "w") as file:
         json.dump(accounts, file)
 
-# 학습 데이터를 로드하는 함수
-def load_learning_data():
-    try:
-        with open("learning_data.json", "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {}
-
-# 학습 데이터를 저장하는 함수
-def save_learning_data(learning_data):
-    with open("learning_data.json", "w") as file:
-        json.dump(learning_data, file)
-
 # GPT의 스트림 데이터를 처리하는 함수
 def stream_gpt_response(prompt):
     response = client.chat.completions.create(
@@ -46,7 +32,7 @@ def stream_gpt_response(prompt):
             if chunk["choices"][0].get("delta", {}).get("content"):
                 content = chunk["choices"][0]["delta"]["content"]
                 full_response += content
-                yield content
+                yield content  # 각 단어 또는 데이터 청크를 스트리밍으로 보냅니다.
 
     st.session_state["last_gpt_response"] = full_response
 
@@ -57,8 +43,7 @@ def handle_button_click(button_type, student_input):
     
     with st.spinner(f"{button_type}에 대한 응답 생성 중..."):
         st.session_state["last_gpt_response"] = ""
-        for word in stream_gpt_response(prompt):
-            st.write(word)  # 이 부분에서 스트림된 내용을 출력합니다.
+        st.write_stream(stream_gpt_response(prompt))  # 스트리밍 데이터를 실시간으로 화면에 출력합니다.
 
     st.session_state.design_messages.append({"role": "assistant", "content": st.session_state["last_gpt_response"]})
 
@@ -95,17 +80,15 @@ def app():
             # GPT의 응답을 스트리밍으로 출력
             with st.spinner("문항 생성 중..."):
                 st.session_state["last_gpt_response"] = ""
-                for word in stream_gpt_response(prompt):
-                    st.write(word)  # 실시간으로 스트리밍된 데이터를 출력합니다.
+                st.write_stream(stream_gpt_response(prompt))  # 스트리밍된 데이터를 실시간으로 출력합니다.
 
             # 마지막 GPT 응답을 화면에 표시
             st.session_state.design_messages.append({"role": "assistant", "content": st.session_state["last_gpt_response"]})
-            st.chat_message("assistant").write(st.session_state["last_gpt_response"])
 
         if st.session_state.get("question_generated"):
             for message in st.session_state.design_messages:
                 with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+                    st.write_stream([message["content"]])
 
             # 입력칸과 버튼을 나란히 배치
             col1, col2 = st.columns([3, 1])
