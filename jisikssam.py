@@ -2,9 +2,6 @@ import streamlit as st
 import json
 from datetime import datetime
 from openai import OpenAI
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 # OpenAI API 키 설정
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -35,26 +32,6 @@ def save_learning_data(learning_data):
     with open("learning_data.json", "w") as file:
         json.dump(learning_data, file)
 
-# 이메일을 전송하는 함수
-def send_email(to_email, subject, body):
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
-    smtp_user = "your_email@gmail.com"  # 실제 Gmail 주소로 변경하세요.
-    smtp_password = st.secrets["EMAIL_PASSWORD"]  # 비밀번호는 secrets에서 불러옵니다.
-
-    msg = MIMEMultipart()
-    msg['From'] = smtp_user  # 보내는 사람의 이메일 주소
-    msg['To'] = to_email  # 받는 사람의 이메일 주소
-    msg['Subject'] = subject  # 이메일 제목
-
-    body = MIMEText(body, 'plain')
-    msg.attach(body)
-
-    with smtplib.SMTP(smtp_server, smtp_port) as server:
-        server.starttls()  # TLS 시작
-        server.login(smtp_user, smtp_password)  # SMTP 서버에 로그인
-        server.sendmail(smtp_user, to_email, msg.as_string())  # 이메일 전송
-
 # GPT의 스트림 데이터를 처리하는 함수
 def stream_gpt_response(prompt):
     response = client.chat.completions.create(
@@ -81,8 +58,8 @@ def handle_button_click(button_type, student_input):
     with st.spinner(f"{button_type}에 대한 응답 생성 중..."):
         st.session_state["last_gpt_response"] = ""
         for word in stream_gpt_response(prompt):
-            st.write_stream(word)
-    
+            st.write(word)  # 이 부분에서 스트림된 내용을 출력합니다.
+
     st.session_state.design_messages.append({"role": "assistant", "content": st.session_state["last_gpt_response"]})
 
 # 메인 애플리케이션 함수
@@ -119,10 +96,11 @@ def app():
             with st.spinner("문항 생성 중..."):
                 st.session_state["last_gpt_response"] = ""
                 for word in stream_gpt_response(prompt):
-                    st.write_stream(word)
+                    st.write(word)  # 실시간으로 스트리밍된 데이터를 출력합니다.
 
             # 마지막 GPT 응답을 화면에 표시
             st.session_state.design_messages.append({"role": "assistant", "content": st.session_state["last_gpt_response"]})
+            st.chat_message("assistant").write(st.session_state["last_gpt_response"])
 
         if st.session_state.get("question_generated"):
             for message in st.session_state.design_messages:
