@@ -128,7 +128,7 @@ def app():
                     ]
                 )
 
-                response_content = response.choices[0].message["content"]
+                response_content = response.choices[0].message.content
 
                 # 중복 추가 방지
                 if not any(msg["content"] == response_content for msg in st.session_state.design_messages):
@@ -164,7 +164,7 @@ def app():
                             ]
                         )
 
-                        response_content = response.choices[0].message["content"]
+                        response_content = response.choices[0].message.content
                         st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
                     except Exception as e:
@@ -184,7 +184,7 @@ def app():
                             ]
                         )
 
-                        response_content = response.choices[0].message["content"]
+                        response_content = response.choices[0].message.content
                         st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
                     except Exception as e:
@@ -203,7 +203,7 @@ def app():
                             ]
                         )
 
-                        response_content = response.choices[0].message["content"]
+                        response_content = response.choices[0].message.content
                         st.session_state.design_messages.append({"role": "assistant", "content": response_content})
 
                     except Exception as e:
