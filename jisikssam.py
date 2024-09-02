@@ -5,7 +5,6 @@ from openai import OpenAI
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import time
 
 # OpenAI API 키 설정
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -63,9 +62,12 @@ def stream_gpt_response(prompt):
         messages=[{"role": "user", "content": prompt}],
         stream=True
     )
-    
+
+    # stream 응답 처리
     for chunk in response:
-        yield chunk["choices"][0]["delta"]["content"]
+        if "choices" in chunk:
+            if chunk["choices"][0].get("delta", {}).get("content"):
+                yield chunk["choices"][0]["delta"]["content"]
 
 # 메인 애플리케이션 함수
 def app():
